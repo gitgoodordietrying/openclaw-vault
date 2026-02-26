@@ -1,4 +1,4 @@
-# openclaw-VAULT: Compose Orchestration (Path A — Podman/Docker + mitmproxy)
+# OpenClaw-Vault: Compose Orchestration (Path A — Podman/Docker + mitmproxy)
 #
 # Usage:
 #   podman compose up -d      (or: docker compose up -d)
@@ -50,6 +50,18 @@ services:
         --listen-port 8080
         --set block_global=false
         --scripts /opt/vault/vault-proxy.py
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+      - /home/mitmproxy/.mitmproxy:size=128m,nosuid
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    mem_limit: 2g
+    pids_limit: 128
     volumes:
       - ./proxy/vault-proxy.py:/opt/vault/vault-proxy.py:ro
       - ./proxy/allowlist.txt:/opt/vault/allowlist.txt:ro

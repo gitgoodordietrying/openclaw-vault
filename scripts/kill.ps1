@@ -1,4 +1,4 @@
-# openclaw-VAULT: Kill Switch (Windows PowerShell)
+# OpenClaw-Vault: Kill Switch (Windows PowerShell)
 # Usage: .\scripts\kill.ps1 -Mode soft|hard|nuclear
 
 param(
@@ -8,7 +8,6 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$VaultDir = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $VaultDir = Split-Path -Parent $PSScriptRoot
 
 # Detect runtime

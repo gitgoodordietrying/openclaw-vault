@@ -1,5 +1,5 @@
 {
-  "_comment": "openclaw-VAULT: Custom seccomp profile — whitelist-augmented default Docker profile with additional syscall blocks for container hardening",
+  "_comment": "OpenClaw-Vault: Custom seccomp profile — whitelist-augmented default Docker profile with additional syscall blocks for container hardening",
   "defaultAction": "SCMP_ACT_ERRNO",
   "defaultErrnoRet": 1,
   "archMap": [

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# openclaw-VAULT: Path B — Docker Desktop Sandbox Plugin Setup
+# OpenClaw-Vault: Path B — Docker Desktop Sandbox Plugin Setup
 #
 # Uses Docker Desktop's built-in sandbox feature (4.49+).
 # Simpler than Path A but the API key IS passed as an env var
@@ -14,7 +14,7 @@ ENV_FILE="$VAULT_DIR/.env"
 SANDBOX_NAME="openclaw-vault"
 
 echo "╔══════════════════════════════════════════════════════╗"
-echo "║    openclaw-VAULT — Docker Sandbox Plugin Path       ║"
+echo "║    OpenClaw-Vault — Docker Sandbox Plugin Path       ║"
 echo "║    (Path B: simpler but weaker key isolation)        ║"
 echo "╚══════════════════════════════════════════════════════╝"
 echo ""

@@ -1,15 +1,13 @@
-# openclaw-VAULT: One-command setup (Windows PowerShell)
+# OpenClaw-Vault: One-command setup (Windows PowerShell)
 # Usage: .\scripts\setup.ps1
 
 $ErrorActionPreference = "Stop"
-$VaultDir = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-# When run from repo root, $PSScriptRoot is scripts/, parent is repo root
 $VaultDir = Split-Path -Parent $PSScriptRoot
 $EnvFile = Join-Path $VaultDir ".env"
 
 Write-Host @"
 +======================================================+
-|         openclaw-VAULT - Secure Containment           |
+|         OpenClaw-Vault - Secure Containment           |
 |    Defense-in-depth sandbox for OpenClaw research     |
 +======================================================+
 "@
@@ -88,7 +86,7 @@ else {
         [Runtime.InteropServices.Marshal]::SecureStringToBSTR($OpenAIKey))
 
     @"
-# openclaw-VAULT API keys - NEVER committed to git
+# OpenClaw-Vault API keys - NEVER committed to git
 ANTHROPIC_API_KEY=$AnthropicPlain
 OPENAI_API_KEY=$OpenAIPlain
 "@ | Set-Content $EnvFile -Encoding UTF8

@@ -1,4 +1,4 @@
-# openclaw-VAULT: Phase 2 — Create Hyper-V isolation VM
+# OpenClaw-Vault: Phase 2 — Create Hyper-V isolation VM
 # STATUS: Placeholder — not yet implemented
 #
 # Will create a minimal Linux VM with:

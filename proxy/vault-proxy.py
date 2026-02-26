@@ -1,5 +1,5 @@
 """
-openclaw-VAULT: mitmproxy Addon — API Key Injection + Domain Allowlist
+OpenClaw-Vault: mitmproxy Addon — API Key Injection + Domain Allowlist
 
 This is the core security component. It runs as a mitmproxy addon in the
 vault-proxy sidecar container, intercepting all outbound traffic from the
@@ -25,7 +25,8 @@ from mitmproxy import ctx, http
 
 LOG_DIR = Path("/var/log/vault-proxy")
 ALLOWLIST_PATH = Path("/opt/vault/allowlist.txt")
-EXFIL_THRESHOLD_BYTES = 10 * 1024 * 1024  # 10 MB — flag large outbound payloads
+EXFIL_THRESHOLD_BYTES = 1 * 1024 * 1024  # 1 MB — block large outbound payloads
+EXFIL_RESPONSE_THRESHOLD_BYTES = 10 * 1024 * 1024  # 10 MB — flag large responses
 
 
 class VaultProxy:
@@ -61,10 +62,11 @@ class VaultProxy:
             for line in f:
                 domain = line.strip()
                 if domain and not domain.startswith("#"):
-                    self.allowlist.add(domain)
+                    self.allowlist.add(domain.lower())
 
     def _is_allowed(self, host: str) -> bool:
         """Check if host matches any allowed domain (exact or subdomain)."""
+        host = host.lower()
         for allowed in self.allowlist:
             if host == allowed or host.endswith("." + allowed):
                 return True
@@ -105,7 +107,7 @@ class VaultProxy:
         # Keys come from environment variables in the PROXY container only.
         # The OpenClaw container never sees these values.
 
-        if "api.anthropic.com" in host:
+        if host == "api.anthropic.com" or host.endswith(".api.anthropic.com"):
             api_key = os.environ.get("ANTHROPIC_API_KEY", "")
             if api_key:
                 flow.request.headers["x-api-key"] = api_key
@@ -113,23 +115,33 @@ class VaultProxy:
             else:
                 ctx.log.warn("ANTHROPIC_API_KEY not set — request will fail auth")
 
-        elif "api.openai.com" in host:
+        elif host == "api.openai.com" or host.endswith(".api.openai.com"):
             api_key = os.environ.get("OPENAI_API_KEY", "")
             if api_key:
                 flow.request.headers["Authorization"] = f"Bearer {api_key}"
             else:
                 ctx.log.warn("OPENAI_API_KEY not set — request will fail auth")
 
-        # --- Flag large outbound payloads (potential exfiltration) ---
+        # --- Block large outbound payloads (potential exfiltration) ---
         request_size = len(flow.request.content) if flow.request.content else 0
         if request_size > EXFIL_THRESHOLD_BYTES:
             self._log_event({
-                "action": "EXFIL_WARNING",
+                "action": "EXFIL_BLOCKED",
                 "method": method,
                 "url": url,
                 "request_bytes": request_size,
                 "reason": f"outbound payload exceeds {EXFIL_THRESHOLD_BYTES} bytes",
             })
+            flow.response = http.Response.make(
+                413,
+                json.dumps({
+                    "error": "exfiltration_blocked",
+                    "message": f"Outbound payload ({request_size} bytes) exceeds "
+                               f"exfiltration threshold ({EXFIL_THRESHOLD_BYTES} bytes).",
+                }).encode(),
+                {"Content-Type": "application/json"},
+            )
+            return
 
         self._log_event({
             "action": "ALLOWED",
@@ -150,7 +162,7 @@ class VaultProxy:
                 "response_bytes": response_size,
             })
 
-            if response_size > EXFIL_THRESHOLD_BYTES:
+            if response_size > EXFIL_RESPONSE_THRESHOLD_BYTES:
                 self._log_event({
                     "action": "LARGE_RESPONSE",
                     "url": flow.request.pretty_url,

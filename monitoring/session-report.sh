@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# openclaw-VAULT: Phase 3 — Session Report Generator
+# OpenClaw-Vault: Phase 3 — Session Report Generator
 # STATUS: Placeholder — not yet implemented
 #
 # Will generate a human-readable post-session report:

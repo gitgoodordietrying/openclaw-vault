@@ -1,4 +1,4 @@
-# openclaw-VAULT: Hardened OpenClaw Container
+# OpenClaw-Vault: Hardened OpenClaw Container
 # Defense-in-depth Layer 2 — rootless container with minimal attack surface
 #
 # Build:  podman build -t openclaw-vault -f Containerfile .
@@ -12,7 +12,7 @@ RUN npm install -g @anthropic-ai/openclaw@latest
 # --- Production stage ---
 FROM node:20-alpine
 
-LABEL maintainer="openclaw-VAULT" \
+LABEL maintainer="OpenClaw-Vault" \
       description="Hardened OpenClaw sandbox — rootless, read-only, proxy-gated"
 
 # Remove package managers and network tools after base setup

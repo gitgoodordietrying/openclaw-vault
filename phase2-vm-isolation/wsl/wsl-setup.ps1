@@ -1,4 +1,4 @@
-# openclaw-VAULT: Phase 2 — Create dedicated WSL2 distro
+# OpenClaw-Vault: Phase 2 — Create dedicated WSL2 distro
 # STATUS: Placeholder — not yet implemented
 #
 # Will:

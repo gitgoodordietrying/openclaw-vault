@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# openclaw-VAULT: Phase 3 — Skill Scanner
+# OpenClaw-Vault: Phase 3 — Skill Scanner
 # STATUS: Placeholder — not yet implemented
 #
 # Will scan SKILL.md files for known malicious patterns:

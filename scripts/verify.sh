@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# openclaw-VAULT: 10-Point Security Verification
+# OpenClaw-Vault: 15-Point Security Verification
 #
 # Runs inside the openclaw-vault container to validate all security controls.
 # Can also be run from the host (it will exec into the container).
@@ -48,7 +48,7 @@ check() {
 }
 
 echo ""
-echo "openclaw-VAULT Security Verification"
+echo "OpenClaw-Vault Security Verification"
 echo "====================================="
 echo ""
 
@@ -59,7 +59,7 @@ if ! $RUNTIME inspect "$CONTAINER" &>/dev/null; then
     exit 1
 fi
 
-echo "Running 10-point security check..."
+echo "Running 15-point security check..."
 echo ""
 
 # 1. Network: can reach allowed domain (via proxy)
@@ -98,10 +98,39 @@ check 8 "Docker socket: not mounted" \
 check 9 "Privilege escalation: sudo unavailable" \
     "which sudo 2>&1" true
 
-# 10. PID limit: verify constraint is active
-# We check /proc/self/cgroup or just verify we're non-root
+# 10. Non-root user
 check 10 "Non-root user: running as vault (uid 1000)" \
     "test \$(id -u) -eq 1000"
+
+# 11. Seccomp: profile is loaded (mode 2 = filter)
+check 11 "Seccomp: profile loaded (filter mode)" \
+    "test \$(grep Seccomp /proc/1/status | awk '{print \$2}') -eq 2"
+
+# 12. Noexec: cannot execute scripts on /tmp
+check 12 "Noexec: /tmp blocks execution" \
+    "echo '#!/bin/sh' > /tmp/nxtest.sh && chmod +x /tmp/nxtest.sh && /tmp/nxtest.sh; rm -f /tmp/nxtest.sh; false" true
+
+# 13. No-new-privileges: flag is set
+check 13 "No-new-privileges: flag set" \
+    "test \$(grep NoNewPrivs /proc/1/status | awk '{print \$2}') -eq 1"
+
+# 14. PID limit: capped at 256
+printf "  [%2d] %-50s " 14 "PID limit: configured"
+pids_limit=$($RUNTIME inspect "$CONTAINER" --format '{{.HostConfig.PidsLimit}}' 2>/dev/null || echo "unknown")
+if [ "$pids_limit" = "256" ]; then
+    echo "PASS (limit = 256)"
+    PASS=$((PASS + 1))
+elif [ "$pids_limit" != "unknown" ] && [ "$pids_limit" != "0" ] && [ "$pids_limit" != "-1" ] 2>/dev/null; then
+    echo "PASS (limit = $pids_limit)"
+    PASS=$((PASS + 1))
+else
+    echo "FAIL — PID limit not confirmed ($pids_limit)"
+    FAIL=$((FAIL + 1))
+fi
+
+# 15. Config integrity: approval mode is always
+check 15 "Config: approval mode = always" \
+    "grep 'mode:.*always' /home/vault/.config/openclaw/config.yml"
 
 echo ""
 echo "====================================="

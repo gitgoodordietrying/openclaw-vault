@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# openclaw-VAULT: One-command setup (Linux/macOS)
+# OpenClaw-Vault: One-command setup (Linux/macOS)
 # Usage: bash scripts/setup.sh
 
 set -euo pipefail
@@ -8,7 +8,7 @@ VAULT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_FILE="$VAULT_DIR/.env"
 
 echo "╔══════════════════════════════════════════════════════╗"
-echo "║         openclaw-VAULT — Secure Containment          ║"
+echo "║         OpenClaw-Vault — Secure Containment          ║"
 echo "║    Defense-in-depth sandbox for OpenClaw research    ║"
 echo "╚══════════════════════════════════════════════════════╝"
 echo ""
@@ -62,7 +62,7 @@ else
     echo ""
 
     cat > "$ENV_FILE" <<ENVEOF
-# openclaw-VAULT API keys — NEVER committed to git
+# OpenClaw-Vault API keys — NEVER committed to git
 # These are injected by the mitmproxy sidecar, not the OpenClaw container.
 #
 # Best practices:

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# openclaw-VAULT: Kill Switch
+# OpenClaw-Vault: Kill Switch
 #
 # Three escalation levels:
 #   --soft    Graceful stop (preserves workspace for forensics)

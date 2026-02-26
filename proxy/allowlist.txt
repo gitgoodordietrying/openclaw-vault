@@ -1,4 +1,4 @@
-# openclaw-VAULT: Domain Allowlist
+# OpenClaw-Vault: Domain Allowlist
 # One domain per line. Subdomains are automatically included.
 # Lines starting with # are comments.
 #
@@ -10,6 +10,9 @@ api.anthropic.com
 api.openai.com
 
 # --- Package registry (skill/dependency installation) ---
+# WARNING: npm install runs arbitrary lifecycle scripts. Packages can execute
+# code at install time, and Node.js require() bypasses noexec mount flags.
+# Only install packages you have reviewed. See README "Known residual risks".
 registry.npmjs.org
 
 # --- OpenClaw skill registry ---

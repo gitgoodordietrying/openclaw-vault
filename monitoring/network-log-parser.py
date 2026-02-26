@@ -1,5 +1,5 @@
 """
-openclaw-VAULT: Phase 3 — Network Log Parser
+OpenClaw-Vault: Phase 3 — Network Log Parser
 STATUS: Placeholder — not yet implemented
 
 Will analyze vault-proxy request logs for:

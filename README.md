@@ -1,4 +1,4 @@
-# openclaw-vault
+# OpenClaw-Vault
 
 You've decided to run [OpenClaw](https://github.com/anthropics/openclaw). This makes that decision less likely to ruin your day.
 
@@ -35,7 +35,7 @@ This isn't theoretical. All of this happened in one week (Jan 28 – Feb 3, 2026
 | **Database breach** | 1.5M API tokens, 35K emails exposed — Supabase RLS was disabled entirely |
 | **21,639 instances exposed** | On the public internet, most with no authentication |
 
-Every other hardening guide puts the API key inside the container as an environment variable. A compromised process reads it from `/proc/self/environ`. The openclaw-vault solves this with proxy-side injection: the container talks to `http://vault-proxy:8080`, the proxy checks the domain allowlist, injects the auth header, and forwards. The container never sees the key.
+Every other hardening guide puts the API key inside the container as an environment variable. A compromised process reads it from `/proc/self/environ`. The OpenClaw-Vault solves this with proxy-side injection: the container talks to `http://vault-proxy:8080`, the proxy checks the domain allowlist, injects the auth header, and forwards. The container never sees the key.
 
 For a deep dive into the threat landscape, see the [Security Analysis Compilation](https://github.com/gitgoodordietrying/openclaw-research/blob/main/docs/security-report.md) in the companion research repository.
 
@@ -45,15 +45,15 @@ For a deep dive into the threat landscape, see the [Security Analysis Compilatio
 
 **For you if:** you know what OpenClaw is, have Docker or Podman installed, want to experiment with Moltbook or agentic workflows, and don't want to hand an unvetted process your API keys and unrestricted network access on your primary machine.
 
-**Not for you if:** you've never used a terminal, don't know what a container is, or expect this to make OpenClaw safe for casual use. OpenClaw's own maintainer said "if you can't understand how to run a command line, this is far too dangerous for you." The openclaw-vault doesn't change that — it makes the dangerous thing safer for people who were going to do it anyway.
+**Not for you if:** you've never used a terminal, don't know what a container is, or expect this to make OpenClaw safe for casual use. OpenClaw's own maintainer said "if you can't understand how to run a command line, this is far too dangerous for you." The OpenClaw-Vault doesn't change that — it makes the dangerous thing safer for people who were going to do it anyway.
 
 ---
 
 ## What This Is (and What It Is Not)
 
-**The openclaw-vault is a safe exploration tool.** It lets you run a Moltbook agent, interact with it via Telegram, observe the agent ecosystem, experiment with system prompts and personas, and prototype agentic workflows — all inside a hardened container that can't access your files, your accounts, or unauthorized network destinations.
+**The OpenClaw-Vault is a safe exploration tool.** It lets you run a Moltbook agent, interact with it via Telegram, observe the agent ecosystem, experiment with system prompts and personas, and prototype agentic workflows — all inside a hardened container that can't access your files, your accounts, or unauthorized network destinations.
 
-**The openclaw-vault is not an agentic workstation.** The features that make OpenClaw a "personal AI assistant" — managing your email, reading your files, controlling your browser, sending WhatsApp messages on your behalf — are deliberately disabled. Those features require host-level access, which is exactly what the openclaw-vault prevents. If you want OpenClaw to manage your life, you accept the full risk surface. The openclaw-vault is deliberately not that.
+**The OpenClaw-Vault is not an agentic workstation.** The features that make OpenClaw a "personal AI assistant" — managing your email, reading your files, controlling your browser, sending WhatsApp messages on your behalf — are deliberately disabled. Those features require host-level access, which is exactly what the OpenClaw-Vault prevents. If you want OpenClaw to manage your life, you accept the full risk surface. The OpenClaw-Vault is deliberately not that.
 
 **In concrete terms, you can:**
 - Run a Moltbook agent that reads, posts, comments, and votes via the allowlisted API
@@ -74,23 +74,23 @@ For a deep dive into the threat landscape, see the [Security Analysis Compilatio
 
 ## Choose Your Isolation Level
 
-The openclaw-vault is the best container-level isolation available for OpenClaw. But containers are not virtual machines, and virtual machines are not air-gapped hardware. Be honest with yourself about your threat model before choosing.
+The OpenClaw-Vault is the best container-level isolation available for OpenClaw. But containers are not virtual machines, and virtual machines are not air-gapped hardware. Be honest with yourself about your threat model before choosing.
 
 ### Tier 1: Disposable Cloud VM — strongest, recommended
 
-Run the openclaw-vault on a $6/month DigitalOcean, Hetzner, or Linode droplet. Separate kernel, separate network, zero relationship to your personal infrastructure. If compromised, the attacker is on a disposable VM with nothing on it. They can't reach your home network, your other machines, or anything real. Destroy and rebuild in minutes.
+Run the OpenClaw-Vault on a $6/month DigitalOcean, Hetzner, or Linode droplet. Separate kernel, separate network, zero relationship to your personal infrastructure. If compromised, the attacker is on a disposable VM with nothing on it. They can't reach your home network, your other machines, or anything real. Destroy and rebuild in minutes.
 
 **Choose this if:** you take the threat landscape seriously, plan to run agents unattended, or want true infrastructure isolation.
 
 ### Tier 2: Local VM — strong
 
-Run the openclaw-vault inside VirtualBox, Hyper-V, or UTM on your local machine. Separate kernel, snapshot/destroy capability similar to a cloud droplet. But the VM shares your physical hardware and local network. A VM escape (rare, state-actor level) puts the attacker on your machine. DNS rebinding could potentially reach LAN devices.
+Run the OpenClaw-Vault inside VirtualBox, Hyper-V, or UTM on your local machine. Separate kernel, snapshot/destroy capability similar to a cloud droplet. But the VM shares your physical hardware and local network. A VM escape (rare, state-actor level) puts the attacker on your machine. DNS rebinding could potentially reach LAN devices.
 
-**Choose this if:** you don't want to pay for cloud hosting but want stronger isolation than a container. Phase 2 of the openclaw-vault (WSL2/Hyper-V layer) targets this tier.
+**Choose this if:** you don't want to pay for cloud hosting but want stronger isolation than a container. Phase 2 of the OpenClaw-Vault (WSL2/Hyper-V layer) targets this tier.
 
 ### Tier 3: Container on your local machine — good, default
 
-This is what the openclaw-vault provides out of the box. The container can't see your files (no host mounts), can't reach unauthorized domains (proxy allowlist), and can't escalate privileges (capabilities dropped, seccomp enforced, non-root user). When you kill the stack, the agent's session data is destroyed.
+This is what the OpenClaw-Vault provides out of the box. The container can't see your files (no host mounts), can't reach unauthorized domains (proxy allowlist), and can't escalate privileges (capabilities dropped, seccomp enforced, non-root user). When you kill the stack, the agent's session data is destroyed.
 
 **However:** the container shares your host kernel. A kernel exploit — unlikely but not impossible — would put the attacker on your actual machine. The container runtime stores metadata and layer caches on the host that survive container destruction. And during a live session, a compromised agent could exfiltrate data through allowed domains before you hit the kill switch.
 
@@ -115,7 +115,7 @@ bash scripts/setup.sh        # Linux / macOS
 .\scripts\setup.ps1          # Windows PowerShell
 ```
 
-Detects your runtime, prompts for your API key, builds the hardened image, starts the stack, runs 10 security checks. Five minutes.
+Detects your runtime, prompts for your API key, builds the hardened image, starts the stack, runs 15 security checks. Five minutes.
 
 ### Path B: Docker Desktop Sandbox Plugin (simpler, weaker)
 
@@ -129,7 +129,7 @@ Fewer moving parts if you're on Docker Desktop 4.49+. Trade-off: the API key liv
 
 ## How You Actually Use This
 
-The openclaw-vault runs the OpenClaw gateway headlessly inside a container. You don't sit inside a terminal typing commands at it. Here's a typical session:
+The OpenClaw-Vault runs the OpenClaw gateway headlessly inside a container. You don't sit inside a terminal typing commands at it. Here's a typical session:
 
 ### Control: Telegram
 
@@ -148,7 +148,7 @@ podman exec vault-proxy cat /var/log/vault-proxy/requests.jsonl
 # Live container logs
 podman compose logs -f
 
-# Re-run the 10-point security check
+# Re-run the 15-point security check
 bash scripts/verify.sh
 ```
 
@@ -194,6 +194,11 @@ bash scripts/verify.sh
 | 8 | Docker socket not mounted | Can't spawn sibling containers |
 | 9 | sudo unavailable | No privilege escalation path |
 | 10 | Running as non-root (uid 1000) | Principle of least privilege |
+| 11 | Seccomp profile loaded | Custom syscall filter active |
+| 12 | Noexec on /tmp | Can't execute dropped payloads |
+| 13 | No-new-privileges set | Setuid binaries can't escalate |
+| 14 | PID limit active | Fork bombs contained at 256 |
+| 15 | Config integrity | Approval mode, telemetry, persistence locked |
 
 ---
 
@@ -229,15 +234,17 @@ ClawHub registry domains are **commented out by default**. Uncomment only after 
 
 ### Known residual risks you must understand
 
-These are not theoretical concerns — they are architectural realities of the openclaw-vault's design. Read them before deploying.
+These are not theoretical concerns — they are architectural realities of the OpenClaw-Vault's design. Read them before deploying.
 
-**The proxy sidecar holds the API key.** The mitmproxy container is the one component that has your key. If an attacker compromises the proxy container itself (not the OpenClaw container), they get the key directly. The proxy is hardened with the same restrictions as the main container (read-only root, dropped capabilities, minimal surface), but you should understand that the key exists somewhere in the stack — just not where OpenClaw can reach it.
+**The proxy sidecar holds the API key.** The mitmproxy container is the one component that has your key. If an attacker compromises the proxy container itself (not the OpenClaw container), they get the key directly. The proxy is hardened with read-only root, dropped capabilities, no-new-privileges, memory/PID limits, and minimal surface — matching the vault container in all respects except the custom seccomp profile, which is not applied to the proxy because mitmproxy requires broader syscall access for TLS interception. You should understand that the key exists somewhere in the stack — just not where OpenClaw can reach it.
 
 **Allowed domains can be abused during a live session.** The API provider domains (e.g. `api.anthropic.com`) must be on the allowlist for OpenClaw to function. A compromised agent can make arbitrary API calls using the proxy-injected credentials — it can't see the raw key, but it can use it. This means it could rack up charges, generate content, or encode exfiltrated data into API request payloads. **Your mitigation: set a hard spending cap on your API key. This is not optional. Treat the spending cap as part of the security boundary, not as a billing preference.**
 
 **The Telegram control channel is a trust boundary.** If someone compromises your Telegram account, they control the agent and can approve any action. Use a dedicated Telegram account (not your personal one), enable two-factor authentication, and treat those credentials as security-critical. Do not reuse passwords.
 
-**Container kill does not guarantee complete cleanup.** When you run `kill.sh --hard`, containers, volumes, and networks are destroyed. The agent's session workspace is gone. But the container runtime (Docker/Podman) stores layer caches, image metadata, and runtime logs on the host that survive container destruction. These do not contain your API key (proxy-side injection ensures that), but they may contain conversation logs or agent activity metadata. For thorough cleanup after you're done with the openclaw-vault entirely, also remove the cloned repo directory and prune your container runtime: `podman system prune -a` or `docker system prune -a`.
+**npm install is a supply-chain risk even inside the container.** The domain allowlist permits `registry.npmjs.org` so OpenClaw can install skill dependencies. However, npm packages can execute arbitrary code during install via lifecycle scripts (`preinstall`, `postinstall`), and Node.js `require()` loads and executes JavaScript regardless of noexec mount flags (noexec only blocks ELF binaries, not interpreted code). A malicious npm package can therefore run code inside the container at install time. The container's other restrictions (no network except allowlisted domains, no host mounts, no capabilities) limit the blast radius, but this is a real gap. **Only install npm packages you have reviewed.**
+
+**Container kill does not guarantee complete cleanup.** When you run `kill.sh --hard`, containers, volumes, and networks are destroyed. The agent's session workspace is gone. But the container runtime (Docker/Podman) stores layer caches, image metadata, and runtime logs on the host that survive container destruction. These do not contain your API key (proxy-side injection ensures that), but they may contain conversation logs or agent activity metadata. For thorough cleanup after you're done with the OpenClaw-Vault entirely, also remove the cloned repo directory and prune your container runtime: `podman system prune -a` or `docker system prune -a`.
 
 ---
 
@@ -256,7 +263,7 @@ openclaw-vault/
 ├── scripts/
 │   ├── setup.sh / setup.ps1     # One-command setup
 │   ├── kill.sh / kill.ps1       # Three-level kill switch
-│   ├── verify.sh                # 10-point security verification
+│   ├── verify.sh                # 15-point security verification
 │   └── docker-sandbox-setup.sh  # Path B alternative
 ├── phase2-vm-isolation/         # [Planned] WSL2/Hyper-V layer
 ├── monitoring/                  # [Planned] Skill scanner, log parser
@@ -273,7 +280,7 @@ The companion research repository documents the full journey:
 
 - [openclaw-research](https://github.com/gitgoodordietrying/openclaw-research) — security analysis, threat modeling, ecosystem exploration, and 24 published ClawHub skills
 
-The openclaw-vault is the infrastructure that emerged from understanding the problem space first.
+The OpenClaw-Vault is the infrastructure that emerged from understanding the problem space first.
 
 ---
 
