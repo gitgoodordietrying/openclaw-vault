@@ -1,0 +1,23 @@
+# openclaw-VAULT: Domain Allowlist
+# One domain per line. Subdomains are automatically included.
+# Lines starting with # are comments.
+#
+# The vault-proxy BLOCKS all traffic to domains not listed here.
+# Add domains only if you understand why OpenClaw needs them.
+
+# --- LLM API providers ---
+api.anthropic.com
+api.openai.com
+
+# --- Package registry (skill/dependency installation) ---
+registry.npmjs.org
+
+# --- OpenClaw skill registry ---
+# WARNING: 11.9% of ClawHub skills were found to be malicious (ClawHavoc).
+# Only uncomment these if you MUST install a specific skill you've reviewed.
+# clawdhub.com
+# www.clawhub.ai
+
+# --- Code hosting (for skill source review) ---
+github.com
+raw.githubusercontent.com

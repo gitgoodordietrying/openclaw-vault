@@ -1,0 +1,13 @@
+# API keys — NEVER commit
+.env
+
+# Proxy logs (may contain request/response data)
+*.jsonl
+proxy-logs/
+
+# Container workspace data
+workspace/
+
+# Runtime artifacts
+*.pid
+*.sock

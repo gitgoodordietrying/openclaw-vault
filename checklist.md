@@ -1,0 +1,6 @@
+  - No yourusername, your-org, openclaw-sandbox, or moltbook-app references in the vault                                                                                                                                                  
+  - No personal info (names, emails, HUBEX, drive references)                                                                                                                                                                             
+  - All scripts use repo-root-relative paths (scripts/, not openclaw-vault/scripts/)
+  - Git clone URL points to gitgoodordietrying/openclaw-vault
+  - Cross-links to gitgoodordietrying/openclaw-research use full GitHub URLs
+  - The vault has its own .gitignore (covers .env, logs, workspace data)

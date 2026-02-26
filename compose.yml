@@ -1,0 +1,74 @@
+# openclaw-VAULT: Compose Orchestration (Path A — Podman/Docker + mitmproxy)
+#
+# Usage:
+#   podman compose up -d      (or: docker compose up -d)
+#   podman compose logs -f     (watch both containers)
+#   podman compose down        (graceful shutdown)
+#
+# Requires: .env file with API keys (see .env.example)
+
+services:
+  # --- OpenClaw container (NO external network access) ---
+  vault:
+    build:
+      context: .
+      dockerfile: Containerfile
+    container_name: openclaw-vault
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,noexec,nosuid
+      - /home/vault/.config:size=64m,noexec,nosuid
+      - /home/vault/workspace:size=1g,noexec,nosuid
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=vault-seccomp.json
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    mem_limit: 4g
+    cpus: 2
+    networks:
+      - vault-internal
+    depends_on:
+      vault-proxy:
+        condition: service_started
+    environment:
+      - HTTP_PROXY=http://vault-proxy:8080
+      - HTTPS_PROXY=http://vault-proxy:8080
+      - NO_PROXY=localhost,127.0.0.1
+      # API keys are NOT here — they live in the proxy only
+    stdin_open: true
+    tty: true
+
+  # --- mitmproxy sidecar (bridges internal ↔ external) ---
+  vault-proxy:
+    image: mitmproxy/mitmproxy:latest
+    container_name: vault-proxy
+    command: >
+      mitmdump
+        --listen-host 0.0.0.0
+        --listen-port 8080
+        --set block_global=false
+        --scripts /opt/vault/vault-proxy.py
+    volumes:
+      - ./proxy/vault-proxy.py:/opt/vault/vault-proxy.py:ro
+      - ./proxy/allowlist.txt:/opt/vault/allowlist.txt:ro
+      - vault-proxy-logs:/var/log/vault-proxy
+    networks:
+      - vault-internal
+      - vault-external
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    # Proxy needs outbound access but vault container does not
+    # vault-internal is isolated; vault-external reaches the internet
+
+networks:
+  vault-internal:
+    internal: true   # No default gateway — vault container is trapped here
+  vault-external:
+    driver: bridge   # Normal internet access for the proxy only
+
+volumes:
+  vault-proxy-logs:
+    driver: local

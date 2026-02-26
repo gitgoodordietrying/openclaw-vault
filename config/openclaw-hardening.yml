@@ -1,0 +1,45 @@
+# openclaw-VAULT: Hardened OpenClaw Gateway Configuration
+#
+# ██████████████████████████████████████████████████████████████████████
+# █  DO NOT INSTALL SKILLS FROM CLAWHUB WITHOUT MANUAL CODE REVIEW   █
+# █  11.9% malicious rate (ClawHavoc). You have been warned.         █
+# ██████████████████████████████████████████████████████████████████████
+#
+# This config locks down OpenClaw to research-safe defaults.
+# Adapted from the openclaw-research companion repo's safe participation guide.
+
+# --- Sandbox isolation ---
+sandbox:
+  mode: "non-main"        # Never run as primary/main agent
+  scope: "session"         # Fresh state each session — no persistence across runs
+  persistence: false       # Explicit: do not persist sandbox state
+
+# --- Execution controls ---
+exec:
+  approvals:
+    mode: "always"         # Every tool execution requires explicit approval
+  host: "sandbox"          # All execution confined to sandbox environment
+
+# --- Tool restrictions ---
+tools:
+  elevated: []             # No tools get elevated/auto-approve privileges
+  exec:
+    host: "sandbox"        # Tools execute only inside sandbox
+
+# --- Network ---
+mdns:
+  enabled: false           # No multicast DNS discovery (prevents LAN scanning)
+
+# --- Agent pairing ---
+pairing:
+  mode: "allowlist"        # Only connect to explicitly listed agents
+  allowlist: []            # Empty by default — no agent-to-agent communication
+
+# --- Memory ---
+memory:
+  persistent: false        # No persistent memory across sessions
+  # Prevents the "4th pillar" of Willison's Lethal Trifecta
+
+# --- Telemetry ---
+telemetry:
+  enabled: false           # No data sent to OpenClaw/ClawHub servers
