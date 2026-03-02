@@ -1,0 +1,256 @@
+# yaml-language-server: $schema=../../schemas/component.schema.json
+
+identity:
+  id: openclaw-vault
+  name: OpenClaw Vault
+  version: "0.1.0"
+  description: Hardened container for the OpenClaw agent runtime
+  role: runtime
+  icon: shield
+  color: "#dc2626"
+  repo: https://github.com/gitgoodordietrying/openclaw-vault
+
+status:
+  states:
+    - id: running
+      label: Running
+      icon: circle-check
+      color: "#22c55e"
+    - id: stopped
+      label: Stopped
+      icon: circle-x
+      color: "#6b7280"
+    - id: error
+      label: Error
+      icon: alert-triangle
+      color: "#ef4444"
+    - id: not_setup
+      label: Not Set Up
+      icon: circle-help
+      color: "#a855f7"
+
+  probes:
+    - command: podman inspect --format '{{.State.Status}}' openclaw-vault 2>/dev/null
+      interval_seconds: 10
+      timeout_seconds: 5
+      rules:
+        - stdout_contains: running
+          state: running
+        - stdout_contains: exited
+          state: stopped
+        - exit_code: 0
+          state: stopped
+    - command: podman image exists openclaw-vault 2>/dev/null && echo exists
+      interval_seconds: 30
+      timeout_seconds: 5
+      rules:
+        - stdout_contains: exists
+          state: stopped
+        - exit_code: 1
+          state: not_setup
+
+  default_state: not_setup
+
+commands:
+  # Lifecycle
+  - id: setup
+    name: Setup
+    description: Build and configure the hardened container environment
+    group: lifecycle
+    type: action
+    danger: safe
+    command: make setup
+    output:
+      format: ansi
+      display: terminal
+    available_when: [not_setup]
+    sort_order: 10
+    timeout_seconds: 300
+
+  - id: start
+    name: Start
+    description: Start the vault container and proxy sidecar
+    group: lifecycle
+    type: action
+    danger: safe
+    command: make start
+    output:
+      format: ansi
+      display: terminal
+    available_when: [stopped]
+    sort_order: 20
+    timeout_seconds: 120
+
+  - id: soft-stop
+    name: Soft Stop
+    description: Gracefully stop the vault container
+    group: lifecycle
+    type: action
+    danger: caution
+    command: make stop
+    output:
+      format: ansi
+      display: terminal
+    available_when: [running]
+    sort_order: 30
+    timeout_seconds: 60
+
+  - id: hard-kill
+    name: Hard Kill
+    description: Force stop the vault container immediately
+    group: lifecycle
+    type: action
+    danger: destructive
+    command: make kill
+    output:
+      format: ansi
+      display: terminal
+    available_when: [running, error]
+    sort_order: 40
+    timeout_seconds: 30
+
+  - id: nuclear-kill
+    name: Nuclear Kill
+    description: Remove all containers, images, and volumes — full reset
+    group: lifecycle
+    type: action
+    danger: destructive
+    command: make nuclear
+    output:
+      format: ansi
+      display: terminal
+    available_when: [stopped, error, running]
+    sort_order: 50
+    timeout_seconds: 120
+
+  # Monitoring
+  - id: verify
+    name: Verify
+    description: Run security verification checks on the container
+    group: monitoring
+    type: query
+    danger: safe
+    command: make verify
+    output:
+      format: ansi
+      display: checklist
+    sort_order: 10
+    timeout_seconds: 60
+
+  - id: logs
+    name: Container Logs
+    description: Stream live logs from the vault container
+    group: monitoring
+    type: stream
+    danger: safe
+    command: podman logs -f openclaw-vault
+    output:
+      format: ansi
+      display: terminal
+    available_when: [running]
+    sort_order: 20
+    timeout_seconds: 0
+
+  - id: proxy-logs
+    name: Proxy Logs
+    description: Stream live logs from the API proxy sidecar
+    group: monitoring
+    type: stream
+    danger: safe
+    command: podman logs -f openclaw-proxy
+    output:
+      format: ansi
+      display: terminal
+    available_when: [running]
+    sort_order: 30
+    timeout_seconds: 0
+
+configs:
+  - path: .env
+    name: Environment Variables
+    description: API keys and runtime configuration (secrets masked in UI)
+    format: env
+    editable: true
+    danger: caution
+    restart_required: true
+    restart_command: soft-stop
+
+  - path: allowlist.txt
+    name: Domain Allowlist
+    description: Domains the agent is permitted to contact
+    format: line-list
+    editable: true
+    danger: safe
+    line_list:
+      item_label: domain
+      pattern: "^[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      example: api.openai.com
+    restart_required: true
+    restart_command: soft-stop
+
+  - path: openclaw-hardening.yml
+    name: Hardening Config
+    description: Container security settings — capabilities, seccomp, read-only mounts
+    format: yaml
+    editable: true
+    danger: destructive
+    schema:
+      type: object
+      properties:
+        security:
+          type: object
+          properties:
+            drop_all_caps:
+              type: boolean
+              description: Drop all Linux capabilities
+            read_only_root:
+              type: boolean
+              description: Mount root filesystem as read-only
+            no_new_privileges:
+              type: boolean
+              description: Prevent privilege escalation
+            seccomp_profile:
+              type: string
+              description: Path to custom seccomp profile
+        network:
+          type: object
+          properties:
+            proxy_port:
+              type: integer
+              description: Port for the API proxy sidecar
+            allowed_endpoints:
+              type: array
+              items:
+                type: string
+              description: API endpoints the proxy will forward to
+    restart_required: true
+    restart_command: soft-stop
+
+health:
+  - id: container-status
+    name: Container
+    command: podman inspect --format '{{.State.Status}}' openclaw-vault 2>/dev/null || echo offline
+    interval_seconds: 10
+    timeout_seconds: 5
+    parse:
+      type: regex
+      expression: "^(.+)$"
+      format: "{value}"
+    thresholds:
+      green: "== running"
+      yellow: "== exited"
+      red: "== offline"
+
+  - id: security-score
+    name: Security
+    command: make verify --quiet 2>/dev/null | tail -1
+    interval_seconds: 60
+    timeout_seconds: 30
+    parse:
+      type: regex
+      expression: "(\\d+)/\\d+ checks passed"
+      format: "{value} checks"
+    thresholds:
+      green: ">= 8"
+      yellow: ">= 5"
+      red: "< 5"
