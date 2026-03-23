@@ -86,7 +86,7 @@ The component.yml declares these commands for the GUI. They map to shell scripts
 | `nuclear-kill` | `make nuclear` | destructive | Remove everything |
 | `verify` | `make verify` | safe | 15-point security check |
 | `logs` | `podman logs -f openclaw-vault` | safe | Stream vault logs |
-| `proxy-logs` | `podman logs -f openclaw-proxy` | safe | Stream proxy logs |
+| `proxy-logs` | `podman logs -f vault-proxy` | safe | Stream proxy logs |
 ## Editable Configs (via GUI)
 
 | Path | Format | Danger | Notes |

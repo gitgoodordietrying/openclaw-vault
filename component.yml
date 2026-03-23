@@ -157,7 +157,7 @@ commands:
     group: monitoring
     type: stream
     danger: safe
-    command: podman logs -f openclaw-proxy
+    command: podman logs -f vault-proxy
     output:
       format: ansi
       display: terminal
