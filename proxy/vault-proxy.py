@@ -32,6 +32,7 @@ LOG_DIR = Path("/var/log/vault-proxy")
 ALLOWLIST_PATH = Path("/opt/vault/allowlist.txt")
 EXFIL_THRESHOLD_BYTES = 1 * 1024 * 1024  # 1 MB — block large outbound payloads
 EXFIL_RESPONSE_THRESHOLD_BYTES = 10 * 1024 * 1024  # 10 MB — block large responses
+ANTHROPIC_API_VERSION = os.environ.get("ANTHROPIC_API_VERSION", "2023-06-01")
 
 
 class VaultProxy:
@@ -160,7 +161,7 @@ class VaultProxy:
             api_key = os.environ.get("ANTHROPIC_API_KEY", "")
             if api_key:
                 flow.request.headers["x-api-key"] = api_key
-                flow.request.headers["anthropic-version"] = "2023-06-01"
+                flow.request.headers["anthropic-version"] = ANTHROPIC_API_VERSION
             else:
                 ctx.log.warn("ANTHROPIC_API_KEY not set — request will fail auth")
 

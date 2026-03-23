@@ -77,6 +77,8 @@ services:
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      # Anthropic API version header injected into proxied requests (update when Anthropic releases a new stable version)
+      - ANTHROPIC_API_VERSION=${ANTHROPIC_API_VERSION:-2023-06-01}
     # Proxy needs outbound access but vault container does not
     # vault-internal is isolated; vault-external reaches the internet
 
