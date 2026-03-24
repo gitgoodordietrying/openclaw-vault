@@ -4,15 +4,21 @@
 # Build:  podman build -t openclaw-vault -f Containerfile .
 # Or:     docker build -t openclaw-vault -f Containerfile .
 
-# node 20.18.2-alpine — pinned 2026-02-26
-FROM node:20-alpine@sha256:ba8312129a193a1f1a781d93afcf6e641956d6e48e3ddefa9b64cd86790ee64c AS builder
+# node 22.22.1-alpine — pinned 2026-03-23 (OpenClaw requires Node >=22.12.0)
+FROM node:22-alpine@sha256:8094c002d08262dba12645a3b4a15cd6cd627d30bc782f53229a2ec13ee22a00 AS builder
+
+# Install build dependencies (git required by some openclaw npm deps)
+RUN apk --no-cache add git
 
 # Install OpenClaw agent runtime
-RUN npm install -g @anthropic-ai/openclaw@2026.2.17
+# --ignore-scripts skips node-llama-cpp's postinstall (native LLM compilation).
+# The vault doesn't use local LLMs — it connects to Anthropic/OpenAI via the proxy.
+# If openclaw has its own postinstall that's needed, we run it selectively below.
+RUN npm install -g openclaw@2026.2.17 --ignore-scripts
 
 # --- Production stage ---
-# node 20.18.2-alpine — pinned 2026-02-26
-FROM node:20-alpine@sha256:ba8312129a193a1f1a781d93afcf6e641956d6e48e3ddefa9b64cd86790ee64c
+# node 22.22.1-alpine — pinned 2026-03-23 (OpenClaw requires Node >=22.12.0)
+FROM node:22-alpine@sha256:8094c002d08262dba12645a3b4a15cd6cd627d30bc782f53229a2ec13ee22a00
 
 LABEL maintainer="OpenClaw-Vault" \
       description="Hardened OpenClaw sandbox — rootless, read-only, proxy-gated"
@@ -27,8 +33,10 @@ RUN apk --no-cache add tini ca-certificates \
 COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY --from=builder /usr/local/bin/openclaw /usr/local/bin/openclaw
 
-# Create non-root user
-RUN addgroup -g 1000 -S vault \
+# Reuse the existing node user (uid/gid 1000) as our vault user.
+# Node 22-alpine already has node:1000. We rename it and set the home dir.
+RUN deluser node 2>/dev/null; delgroup node 2>/dev/null; \
+    addgroup -g 1000 -S vault \
     && adduser -u 1000 -S vault -G vault -h /home/vault -s /bin/sh
 
 # Hardened OpenClaw config — stored in /opt so tmpfs on ~/.config doesn't shadow it.
