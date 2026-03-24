@@ -29,9 +29,11 @@ RUN apk --no-cache add tini ca-certificates \
     && rm -rf /sbin/apk /usr/bin/wget /usr/bin/curl \
     && rm -rf /var/cache/apk/* /tmp/*
 
-# Copy OpenClaw from builder
+# Copy OpenClaw from builder and create proper bin symlink.
+# npm creates a symlink at /usr/local/bin/openclaw -> ../lib/node_modules/openclaw/openclaw.mjs
+# but COPY flattens symlinks, breaking relative imports. We recreate the link.
 COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
-COPY --from=builder /usr/local/bin/openclaw /usr/local/bin/openclaw
+RUN ln -sf ../lib/node_modules/openclaw/openclaw.mjs /usr/local/bin/openclaw
 
 # Reuse the existing node user (uid/gid 1000) as our vault user.
 # Node 22-alpine already has node:1000. We rename it and set the home dir.

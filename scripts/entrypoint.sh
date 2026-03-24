@@ -20,14 +20,14 @@ fi
 # --- Wait for mitmproxy CA cert (must be complete PEM, not partially written) ---
 CERT="/opt/proxy-ca/mitmproxy-ca-cert.pem"
 echo "[vault] Waiting for proxy CA certificate..."
-for i in $(seq 1 30); do
+for i in $(seq 1 60); do
     if [ -f "$CERT" ] && grep -q "END CERTIFICATE" "$CERT" 2>/dev/null; then
         break
     fi
     sleep 1
 done
 if [ ! -f "$CERT" ] || ! grep -q "END CERTIFICATE" "$CERT" 2>/dev/null; then
-    echo "[vault] ERROR: Proxy CA cert not found or incomplete after 30s. Aborting." >&2
+    echo "[vault] ERROR: Proxy CA cert not found or incomplete after 60s. Aborting." >&2
     exit 1
 fi
 
