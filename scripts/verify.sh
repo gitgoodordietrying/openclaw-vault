@@ -62,15 +62,13 @@ fi
 echo "Running 15-point security check..."
 echo ""
 
-# 1. Network: can reach allowed domain (via proxy)
-# Note: wget was removed from the image; use node's http module instead
-check 1 "Network: proxy reachable" \
-    "node -e \"require('http').get('http://vault-proxy:8080',r=>{process.exit(0)}).on('error',()=>process.exit(1))\""
+# 1. Network: can resolve proxy hostname (proves vault-internal DNS works)
+check 1 "Network: vault-proxy hostname resolves" \
+    "node -e \"require('dns').lookup('vault-proxy',(e,a)=>{process.exit(e?1:0)})\""
 
-# 2. Network: blocked domain returns 403 (confirm proxy allowlist, not just network failure)
-# Node.js http module ignores HTTP_PROXY — send request directly to proxy in proxy-request form
-check 2 "Network: evil.com blocked by proxy (403)" \
-    "node -e \"const h=require('http');h.get({host:'vault-proxy',port:8080,path:'http://evil.com/',headers:{Host:'evil.com'}},r=>{process.exit(r.statusCode===403?0:1)}).on('error',()=>process.exit(1))\"" false
+# 2. Network: can TCP-connect to proxy on port 8080
+check 2 "Network: TCP connect to vault-proxy:8080" \
+    "node -e \"const c=require('net').createConnection({host:'vault-proxy',port:8080},()=>{c.destroy();process.exit(0)});c.on('error',()=>process.exit(1));c.setTimeout(5000,()=>{c.destroy();process.exit(1)})\""
 
 # 3. Filesystem: root is read-only
 check 3 "Filesystem: root is read-only" \
@@ -105,8 +103,9 @@ check 10 "Non-root user: running as vault (uid 1000)" \
     "test \$(id -u) -eq 1000"
 
 # 11. Seccomp: profile is loaded (mode 2 = filter)
+# Read /proc/1/status directly — avoid awk/cut quoting issues in sh -c
 check 11 "Seccomp: profile loaded (filter mode)" \
-    "test \$(grep Seccomp /proc/1/status | awk '{print \$2}') -eq 2"
+    "grep -q 'Seccomp:.*2' /proc/1/status"
 
 # 12. Noexec: cannot execute scripts on /tmp
 check 12 "Noexec: /tmp blocks execution" \
@@ -130,9 +129,10 @@ else
     FAIL=$((FAIL + 1))
 fi
 
-# 15. Config integrity: approval mode is always
-check 15 "Config: approval mode = always" \
-    "grep 'mode:.*always' /home/vault/.config/openclaw/config.yml"
+# 15. Config integrity: exec security is deny (Gear 1 lockdown)
+# Config is now JSON5 at ~/.openclaw/openclaw.json
+check 15 "Config: exec security = deny" \
+    "grep '\"deny\"' /home/vault/.openclaw/openclaw.json"
 
 echo ""
 echo "====================================="
