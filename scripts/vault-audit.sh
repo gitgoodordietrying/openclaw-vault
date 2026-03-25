@@ -379,13 +379,18 @@ audit_config() {
     echo "  Sandbox mode:     $sandbox_mode"
     echo "  Elevated access:  $elevated"
 
-    # Determine shell level
-    if [ "$tool_profile" = "minimal" ] && [ "$exec_security" = "deny" ]; then
-        ok "Shell level: HARD SHELL (maximum lockdown)"
-    elif [ "$exec_security" = "deny" ]; then
-        ok "Shell level: SPLIT SHELL (selective access, no exec)"
+    # Determine shell level by checking exec security + deny list contents
+    local has_group_fs_denied
+    has_group_fs_denied=$(exec_in_vault "grep -c 'group:fs' /home/vault/.openclaw/openclaw.json" 2>/dev/null || echo "0")
+
+    if [ "$exec_security" = "deny" ] && [ "$has_group_fs_denied" -gt 0 ]; then
+        ok "Shell level: HARD SHELL (maximum lockdown — exec denied, fs denied)"
+    elif [ "$exec_security" = "allowlist" ] && [ "$tool_profile" = "minimal" ]; then
+        ok "Shell level: SPLIT SHELL (controlled exec via safeBins + approval)"
     elif [ "$exec_security" = "allowlist" ]; then
         warn "Shell level: SOFT SHELL (broad access)"
+    elif [ "$exec_security" = "deny" ]; then
+        ok "Shell level: HARD SHELL (exec denied)"
     else
         flag "Shell level: UNKNOWN — config does not match any expected shell"
     fi

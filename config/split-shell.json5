@@ -1,21 +1,30 @@
 // OpenClaw-Vault: Split Shell Configuration
 //
-// Split Shell enables file read/write in the workspace (persistent memory)
-// while keeping exec, browser, cron, and sessions denied.
+// Split Shell enables the agent to do useful work through controlled exec access
+// with a strict safeBins allowlist and human approval for every command.
 //
 // What's different from Hard Shell:
-//   - group:fs REMOVED from deny list → agent can read/write files
-//   - tools.fs.workspaceOnly = true → restricts to workspace/ directory only
+//   - exec ENABLED with security: "allowlist" + ask: "always"
+//   - safeBins: file manipulation commands only (cat, mkdir, cp, mv, etc.)
+//   - group:fs removed from deny → read, apply_patch available
 //   - Persistent volume → memory, identity, and pairing survive restarts
 //
 // What stays the same:
-//   - Exec denied (no shell commands)
 //   - Browser denied (no web access)
 //   - Cron denied (no scheduled tasks)
 //   - Sessions denied (no sub-agents)
 //   - Elevated permanently disabled
 //   - Proxy allowlist unchanged (3 domains)
 //   - Exoskeleton fully enforced (read-only root, caps dropped, seccomp, noexec)
+//
+// Safety model (three independent layers):
+//   Layer 1: safeBins allowlist — only approved binaries can run
+//   Layer 2: ask "always" — every command shown to user for approval via Telegram
+//   Layer 3: Exoskeleton — even if layers 1-2 fail, container limits damage
+//
+// NEVER add to safeBins: sh, bash, node, python, ruby, perl (interpreters)
+// NEVER add to safeBins: curl, wget (network tools — stripped from image anyway)
+// NEVER add to safeBins: chmod, chown (permission manipulation)
 //
 // JSON5 format — comments and trailing commas are valid.
 // Unknown keys cause the Gateway to refuse to start (Zod schema validation).
@@ -34,30 +43,66 @@
     },
   },
 
-  // --- Tool restrictions (Split Shell: workspace file I/O enabled) ---
+  // --- Tool restrictions (Split Shell: controlled exec + file I/O) ---
   tools: {
-    // "minimal" profile: messaging + read-only tools.
-    // With group:fs removed from deny, read/write/edit/apply_patch become available.
     profile: "minimal",
     deny: [
-      "group:runtime",      // No exec, no process
+      // STILL DENIED in Split Shell:
       "group:automation",   // No cron, no webhooks
       "group:sessions",     // No sub-agents
       "sessions_spawn",     // Explicit: no sub-agent spawning
       "sessions_send",      // Explicit: no cross-session messaging
       "gateway",            // Cannot modify its own gateway
       "cron",               // No scheduled tasks
-      "exec",               // No shell commands
-      "process",            // No background processes
       "browser",            // No web browsing
-      // NOTE: "group:fs" is NOT in this list — file I/O is ENABLED in Split Shell
+      "canvas",             // No visual workspace
+      "nodes",              // No device control
+
+      // REMOVED from deny (was in Hard Shell):
+      // "group:runtime"    → exec now ENABLED (with safeBins + ask: always)
+      // "group:fs"         → read, apply_patch now available
+      // "exec"             → now allowed through the allowlist mechanism
+      // "process"          → still denied via group:runtime? No — see note below
     ],
 
-    // Exec: still completely blocked
+    // Exec: ENABLED with strict controls
     exec: {
-      security: "deny",
+      // "allowlist" = only commands matching safeBins or approved patterns are allowed.
+      // Unknown commands trigger an approval request to the user via Telegram.
+      security: "allowlist",
+
+      // "always" = EVERY exec invocation requires user approval via Telegram,
+      // even if the binary is in safeBins. The user sees the exact command
+      // and taps Approve or Deny. No silent execution.
       ask: "always",
+
+      // Commands run inside the container (not on the host — there is no host access)
       host: "sandbox",
+
+      // safeBins: binaries that are pre-approved for the allowlist check.
+      // With ask: "always", these STILL require user approval — safeBins just means
+      // the command won't be rejected before reaching the approval step.
+      //
+      // ONLY file manipulation commands. No interpreters. No network tools.
+      safeBins: [
+        "cat",       // Read/write file contents
+        "echo",      // Write text to files
+        "mkdir",     // Create directories
+        "cp",        // Copy files
+        "mv",        // Move/rename files
+        "rm",        // Remove files (within workspace only — workspaceOnly enforced)
+        "touch",     // Create empty files
+        "date",      // Get current date/time (for timestamped notes)
+        "head",      // Read first N lines
+        "tail",      // Read last N lines
+        "wc",        // Word/line count
+        "sort",      // Sort file contents
+        "uniq",      // Deduplicate lines
+        "tr",        // Character translation
+        "cut",       // Extract columns
+        "jq",        // JSON processing
+        "tee",       // Write to file and stdout
+      ],
     },
 
     // Elevated access: PERMANENTLY DISABLED in all shell levels
