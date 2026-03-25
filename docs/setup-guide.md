@@ -211,10 +211,58 @@ bash scripts/kill.sh --soft
 bash scripts/kill.sh --hard
 ```
 
-**Starting again:**
+**Starting again after a stop:**
 ```bash
+cd /path/to/openclaw-vault
 podman-compose up -d
 ```
+
+Wait about 60 seconds, then pair Telegram again (see Step 7).
+
+**Starting again after a reboot:**
+Same as above. The containers don't auto-start after a reboot — you must run `podman-compose up -d` manually.
+
+### Startup Timing
+
+| What happens | How long |
+|-------------|----------|
+| Containers created | ~4 seconds |
+| Proxy generates security certificate | ~10 seconds |
+| OpenClaw reads config and starts | ~30 seconds |
+| Gateway ready, Telegram connected | **~60 seconds total** |
+
+You'll know it's ready when the bot responds to your Telegram message.
+
+### Why You Need to Re-Pair After Every Restart
+
+In Gear 1 (Manual mode), the agent has **no persistent memory**. Every restart is a clean slate — including the Telegram pairing. This is a security feature: if the container were ever compromised, restarting it wipes all session data.
+
+This means:
+- After every `podman-compose up -d`, send a message to your bot and approve the new pairing code
+- The bot won't remember previous conversations after a restart
+- Your API key and bot token are preserved (they're in `.env`, not in the container)
+
+### Memory Usage
+
+The vault uses approximately **500 MB of RAM** when running (two containers). On machines with less than 4 GB of total RAM, this may cause slowdowns. Stop the vault when not in use with `bash scripts/kill.sh --soft`.
+
+---
+
+## Important: The Agent May Claim False Capabilities
+
+The AI agent may sometimes **claim it can do things it actually cannot**. For example, it might say "I ran a command and here are the results" when it actually has no ability to run commands in Gear 1.
+
+**This is a known behavior of smaller AI models.** The agent isn't being malicious — it's trying to be helpful and fills in gaps with plausible-sounding answers. But it can be misleading.
+
+**How to verify:** If the agent claims it did something (ran a command, read a file, accessed a website), you can check the proxy logs:
+
+```bash
+podman exec vault-proxy cat /var/log/vault-proxy/requests.jsonl | tail -10
+```
+
+If the action doesn't appear in the logs, the agent fabricated it. In Gear 1, the agent can ONLY have conversations — it cannot run commands, read files, or access websites beyond the approved list.
+
+**Rule of thumb:** Trust the proxy logs, not the agent's claims.
 
 ---
 
@@ -245,6 +293,17 @@ podman-compose up -d
 
 ### Build fails
 Make sure you have enough disk space (`df -h`) and memory (`free -h`). The build needs about 1 GB of disk and 2 GB of RAM.
+
+### Moved the project folder and containers won't start
+If you moved the `openclaw-vault` directory to a different location, the existing containers have the old path baked in. Fix:
+```bash
+podman rm -f vault-proxy openclaw-vault
+podman-compose up -d
+```
+This recreates the containers with the correct paths.
+
+### Agent claims to run commands but nothing happens
+This is normal in Gear 1 (Manual mode). The agent's tools are disabled — it cannot run commands, read files, or browse the web. If it claims otherwise, it's fabricating. See the "Important: The Agent May Claim False Capabilities" section above.
 
 ---
 
