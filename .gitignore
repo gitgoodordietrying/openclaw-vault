@@ -45,3 +45,4 @@ build/
 # Screenshots / temp images
 *.png
 !docs/*.png
+.vault-audit-timestamp
