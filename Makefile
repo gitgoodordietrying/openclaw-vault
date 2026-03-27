@@ -1,4 +1,4 @@
-.PHONY: help setup start stop kill nuclear verify
+.PHONY: help setup start stop kill nuclear verify network-report
 
 SHELL := /bin/bash
 
@@ -34,3 +34,6 @@ nuclear: ## Remove all containers, images, and volumes — full reset
 
 verify: ## Run 15-point security verification checks
 	@bash scripts/verify.sh
+
+network-report: ## Analyze proxy logs for security anomalies
+	@python3 monitoring/network-log-parser.py
