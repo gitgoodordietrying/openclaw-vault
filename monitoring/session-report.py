@@ -143,10 +143,11 @@ def extract_text(content):
             if isinstance(block, dict):
                 if block.get("type") == "text":
                     parts.append(block.get("text", "").strip())
-                elif block.get("type") == "tool_use":
+                elif block.get("type") in ("tool_use", "toolCall"):
                     # Tool call embedded in content blocks
-                    parts.append(f"[tool_use: {block.get('name', '?')}]")
-                elif block.get("type") == "tool_result":
+                    # OpenClaw uses "toolCall", Anthropic API uses "tool_use"
+                    parts.append(f"[tool: {block.get('name', '?')}]")
+                elif block.get("type") in ("tool_result", "toolResult"):
                     parts.append("[tool_result]")
         return " ".join(parts)
     return ""
@@ -212,41 +213,47 @@ def analyze_transcripts(raw_content):
             elif role == "assistant":
                 assistant_messages += 1
 
-                # Extract tool_use blocks from assistant content
+                # Extract tool call blocks from assistant content.
+                # OpenClaw uses "toolCall" with "arguments"; Anthropic API
+                # uses "tool_use" with "input". We handle both.
                 if isinstance(content, list):
                     for block in content:
-                        if isinstance(block, dict) and block.get("type") == "tool_use":
-                            tool_name = sanitize(block.get("name", "unknown"))
-                            tool_calls[tool_name] += 1
+                        if not isinstance(block, dict):
+                            continue
+                        block_type = block.get("type", "")
+                        if block_type not in ("tool_use", "toolCall"):
+                            continue
 
-                            # Extract exec commands specifically
-                            if tool_name in ("exec", "bash", "Bash"):
-                                tool_input = block.get("input", {})
-                                if isinstance(tool_input, dict):
-                                    cmd = sanitize(tool_input.get("command", ""))
-                                    if cmd:
-                                        exec_commands.append((ts_str, cmd))
+                        tool_name = sanitize(block.get("name", "unknown"))
+                        tool_calls[tool_name] += 1
 
-                            # Track file operations
-                            if tool_name in ("read", "write", "edit", "apply_patch"):
-                                tool_input = block.get("input", {})
-                                if isinstance(tool_input, dict):
-                                    path = tool_input.get("path", "") or tool_input.get("file_path", "")
-                                    if path:
-                                        files_mentioned.add(sanitize(path))
+                        # Get tool arguments (OpenClaw: "arguments", Anthropic: "input")
+                        tool_args = block.get("arguments", {}) or block.get("input", {})
+                        if not isinstance(tool_args, dict):
+                            tool_args = {}
+
+                        # Extract exec commands specifically
+                        if tool_name in ("exec", "bash", "Bash"):
+                            cmd = sanitize(tool_args.get("command", ""))
+                            if cmd:
+                                exec_commands.append((ts_str, cmd))
+
+                        # Track file operations
+                        if tool_name in ("read", "write", "edit", "apply_patch"):
+                            path = tool_args.get("path", "") or tool_args.get("file_path", "")
+                            if path:
+                                files_mentioned.add(sanitize(path))
+
+            elif role == "toolResult":
+                # OpenClaw tool results are messages with role "toolResult"
+                is_error = msg.get("isError", False)
+                if is_error:
+                    approval_denied += 1
+                else:
+                    approval_allowed += 1
 
             elif role == "system":
                 system_messages += 1
-
-        elif etype == "tool_result":
-            # Check for approval patterns in tool results
-            result_content = entry.get("content", "")
-            if isinstance(result_content, str):
-                lower = result_content.lower()
-                if "denied" in lower or "rejected" in lower:
-                    approval_denied += 1
-                elif "approved" in lower or "allowed" in lower:
-                    approval_allowed += 1
 
     # --- Build report ---
     report = {
