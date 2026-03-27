@@ -61,7 +61,7 @@ Two-container stack (compose.yml):
 │  - NO internet (vault-internal only)        │
 │  - NO real API keys (placeholder only)      │
 │  - sandbox.mode="off" (container IS sandbox)│
-│  - Tool profile: minimal (deny: exec, fs)   │
+│  - Tool profile: coding (deny: browser, web) │
 │  - Telegram bot for user interaction        │
 └─────────────────────────────────────────────┘
 ```
@@ -106,7 +106,8 @@ openclaw-vault/
 └── docs/
     ├── openclaw-internals.md       Source code analysis (verified knowledge)
     ├── phase1-findings.md          Phase 1 compatibility test results
-    ├── phase2-test-results.md      Phase 2 Gear 1 test results (pending)
+    ├── openclaw-reference.md       How OpenClaw works (tools, config, Telegram, sessions)
+    ├── roadmap.md                  Phased development plan
     └── setup-guide.md              Non-technical user setup guide
 ```
 
@@ -122,10 +123,10 @@ openclaw-vault/
 |---------|-------|-----|
 | `agents.defaults.model.primary` | `"anthropic/claude-haiku-4-5"` | Cheapest model, $5 test key |
 | `agents.defaults.sandbox.mode` | `"off"` | Container IS the sandbox; no Docker socket available |
-| `tools.profile` | `"minimal"` | Gear 1: messaging + read-only only |
-| `tools.deny` | `[exec, process, browser, group:runtime, group:fs, ...]` | Gear 1: maximum lockdown |
-| `tools.exec.security` | `"deny"` | Double-deny: tool denied AND exec security denied |
-| `tools.elevated.enabled` | `false` | Permanently disabled in all gears |
+| `tools.profile` | `"coding"` | Split Shell: includes exec, read, write, grep, find, ls |
+| `tools.deny` | `[browser, web_search, web_fetch, group:automation, group:sessions, ...]` | Split Shell: no web, no cron, no sub-agents |
+| `tools.exec.security` | `"allowlist"` | Only safeBins-approved commands, with Telegram approval |
+| `tools.elevated.enabled` | `false` | Permanently disabled in all shell levels |
 | `gateway.mode` | `"local"` | Required for containerized operation |
 | `channels.telegram.dmPolicy` | `"pairing"` | Each sender must be approved |
 

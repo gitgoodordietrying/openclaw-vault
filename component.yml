@@ -175,7 +175,7 @@ configs:
     restart_required: true
     restart_command: soft-stop
 
-  - path: allowlist.txt
+  - path: proxy/allowlist.txt
     name: Domain Allowlist
     description: Domains the agent is permitted to contact
     format: line-list
@@ -188,41 +188,27 @@ configs:
     restart_required: true
     restart_command: soft-stop
 
-  - path: openclaw-hardening.yml
-    name: Hardening Config
-    description: Container security settings — capabilities, seccomp, read-only mounts
-    format: yaml
+  - path: config/openclaw-hardening.json5
+    name: Agent Security Config
+    description: OpenClaw tool policy, exec controls, shell level configuration
+    format: json5
     editable: true
     danger: destructive
     schema:
       type: object
       properties:
-        security:
+        tools:
           type: object
-          properties:
-            drop_all_caps:
-              type: boolean
-              description: Drop all Linux capabilities
-            read_only_root:
-              type: boolean
-              description: Mount root filesystem as read-only
-            no_new_privileges:
-              type: boolean
-              description: Prevent privilege escalation
-            seccomp_profile:
-              type: string
-              description: Path to custom seccomp profile
-        network:
+          description: Tool policy — profile, deny/allow lists, exec controls
+        agents:
           type: object
-          properties:
-            proxy_port:
-              type: integer
-              description: Port for the API proxy sidecar
-            allowed_endpoints:
-              type: array
-              items:
-                type: string
-              description: API endpoints the proxy will forward to
+          description: Agent defaults — model, sandbox mode
+        gateway:
+          type: object
+          description: Gateway mode and binding
+        channels:
+          type: object
+          description: Messaging channel configuration (Telegram, WhatsApp)
     restart_required: true
     restart_command: soft-stop
 

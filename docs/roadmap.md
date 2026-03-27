@@ -1,0 +1,214 @@
+# OpenClaw-Vault Roadmap
+
+**Updated:** 2026-03-27
+**Current state:** Hard Shell and Split Shell working. Hum communicates via Telegram, has persistent memory, can execute file commands with user approval.
+**Cross-reference:** See `docs/trifecta.md` in the lobster-trapp root for how this module fits with clawhub-forge and moltbook-pioneer.
+
+---
+
+## Phase 1: Documentation Cleanup
+
+**Why:** Stale docs create confusion and waste time. Fix before building anything new.
+
+| Task | Details |
+|---|---|
+| Fix `component.yml` config paths | `openclaw-hardening.yml` → `config/openclaw-hardening.json5`, `allowlist.txt` → `proxy/allowlist.txt`, format `yaml` → `json5` |
+| Update `CLAUDE.md` | Profile `"minimal"` → `"coding"` (current Split Shell state), fix stale claims |
+| Complete Gear → Shell terminology migration | Update `docs/setup-guide.md`, cross-reference `GLOSSARY.md` |
+| Remove redundant `monitoring/skill-scanner.sh` | Replace with pointer to clawhub-forge's `tools/skill-scan.sh` |
+| Add OpenClaw version pin note | `openclaw-internals.md` and `phase1-findings.md` cover different versions (2026.2.17 vs 2026.2.26) — clarify which is current (2026.2.26, pinned in Containerfile) |
+| Split `definitions.md` | Keep ecosystem definitions (lines 1-120). Move competitive positioning (121-323) to `product-assessment.md` in lobster-trapp root |
+
+**Exit criteria:** All docs reflect current state. No stale claims. Terminology consistent.
+
+---
+
+## Phase 2: Runtime Monitoring
+
+**Why:** Before granting more autonomy (Soft Shell), we need full visibility into what Hum does. Monitor first, expand later.
+
+### 2a: Network Log Parser
+
+Replace `monitoring/network-log-parser.py` stub with a real implementation.
+
+**Input:** `requests.jsonl` from vault-proxy (structured JSON, one entry per request/response).
+
+**Output:** Human-readable report with:
+- Summary: total requests, allowed/blocked counts, unique domains
+- Anomaly flags:
+  - Requests to unexpected domains (should never happen with allowlist, but defense-in-depth)
+  - Unusually large payloads (> configurable threshold)
+  - High request frequency in short windows (potential abuse)
+  - Requests outside normal hours (if configured)
+- Per-domain breakdown: request count, total bytes, blocked count
+- Timeline: requests over time (text-based, for terminal output)
+
+**Implementation notes:**
+- Python script (matches existing stub language)
+- Reads from proxy container volume or via `podman exec`
+- Must work when container is stopped (read from volume directly)
+- JSON output mode for programmatic consumption
+- Wire into `component.yml` as a monitoring command
+- Add to Makefile as `make network-report`
+
+### 2b: Session Report Generator
+
+Replace `monitoring/session-report.sh` stub with a real implementation.
+
+**Input:** Session transcript `.jsonl` files + proxy `requests.jsonl`.
+
+**Output:** Post-session summary:
+- Session duration (first to last message timestamp)
+- Message count (user messages, agent responses, tool calls)
+- Tools used (which tools were invoked, how many times)
+- Commands executed (exact commands, approval status)
+- Files created/modified in workspace
+- Network activity (domains contacted, requests allowed/blocked)
+- Security events (any blocked requests, approval denials, injection patterns)
+- API usage estimate (request count to api.anthropic.com, rough token estimate from payload sizes)
+
+**Implementation notes:**
+- Bash script (matches existing pattern)
+- Combines data from session transcripts AND proxy logs for complete picture
+- Must work when container is stopped
+- Wire into `component.yml` and Makefile as `make session-report`
+
+### 2c: Skill Scanner Stub Cleanup
+
+- Delete `monitoring/skill-scanner.sh`
+- Create `monitoring/README.md` explaining that skill scanning lives in clawhub-forge
+- Update `TODO.md` to reflect this decision
+
+### 2d: Log Rotation
+
+- Add log rotation for `requests.jsonl` (rotate at 10MB, keep 5 rotations)
+- Add session transcript size monitoring (warn if total exceeds 100MB)
+- Document cleanup procedure
+
+**Exit criteria:** `make network-report` and `make session-report` produce useful output. Monitoring stubs are gone. Logs don't grow unbounded.
+
+---
+
+## Phase 3: Split Shell Completion
+
+**Why:** Split Shell works but has rough edges. Fix them before designing Soft Shell.
+
+### 3a: Shell-Aware Verification
+
+`verify.sh` check #15 hardcodes `exec security = deny` — this fails on Split Shell where exec security is `"allowlist"`.
+
+**Fix:**
+- Detect current shell level from running config
+- Adjust expected values per shell:
+  - Hard Shell: expect `security: "deny"`
+  - Split Shell: expect `security: "allowlist"` + `ask: "always"` + safeBins present
+  - Soft Shell: (define when Soft Shell is designed)
+- Add checks specific to Split Shell:
+  - Verify safeBinProfiles match safeBins (no orphans)
+  - Verify `host: "gateway"` (not `"sandbox"`)
+  - Verify `workspaceOnly: true`
+  - Verify persistent volume is mounted
+
+### 3b: Per-Shell Allowlist
+
+Currently all shells use the same 3-domain `proxy/allowlist.txt`. Future shells may need different domains.
+
+**Design decision needed:** Should allowlists be per-shell files (`proxy/hard-shell-allowlist.txt`, `proxy/split-shell-allowlist.txt`) or should `switch-shell.sh` swap the allowlist file during molt?
+
+**For now:** Document that the 3-domain allowlist is intentionally shared between Hard Shell and Split Shell. Soft Shell allowlist design is a Phase 4 task.
+
+### 3c: Test Runner
+
+12 test scripts exist in `tests/` but have no runner. Create `make test` that:
+- Runs all 12 test scripts sequentially
+- Reports pass/fail per script
+- Returns non-zero if any fail
+- Works alongside `make verify` (which runs verify.sh)
+
+### 3d: `read-chat.sh` Improvements
+
+- Remove the 300-character truncation (line 58) — full messages are needed for monitoring
+- Add `--tool-calls` flag to show tool invocations (currently filtered out)
+- Add `--since TIMESTAMP` flag to show messages after a point in time
+
+**Exit criteria:** `verify.sh` passes on both Hard Shell and Split Shell. `make test` runs all tests. `read-chat.sh` shows full conversation with tool calls.
+
+---
+
+## Phase 4: Soft Shell Design
+
+**Why:** Soft Shell is the next trust level — broader autonomy while the exoskeleton stays enforced. Requires a proper design process before implementation.
+
+### Design Questions to Answer
+
+1. **Approval model:** Does Soft Shell keep `ask: "always"` for all commands, or auto-approve safeBins and only prompt for unknowns?
+2. **Extended safeBins:** Which additional commands? Candidates: `grep`, `find`, `ls`, `sed`, `awk`, `diff`. These are already in the `coding` profile but not in Split Shell's safeBins.
+3. **New domains:** Does Soft Shell unlock `raw.githubusercontent.com` (for reading skill source code)? Any others?
+4. **Process tool:** Split Shell denies `process` (background processes). Does Soft Shell allow it?
+5. **Sub-agents:** Split Shell denies `group:sessions`. Does Soft Shell allow limited sub-agent spawning?
+6. **Browser:** Split Shell denies `browser`. Does Soft Shell allow sandboxed browsing through the proxy?
+7. **Cron:** Split Shell denies `cron`. Does Soft Shell allow scheduling?
+
+### Implementation Work (after design)
+
+- Create `config/soft-shell.json5`
+- Update `switch-shell.sh` to support `soft|3`
+- Create per-shell allowlist if needed
+- Update `verify.sh` with Soft Shell expectations
+- Write Soft Shell verification tests
+- Document in `openclaw-reference.md`
+
+**Exit criteria:** Soft Shell design document written and approved. Config file created. Verify + tests pass. Hum demonstrably has broader capability while exoskeleton holds.
+
+---
+
+## Phase 5: Cross-Module Integration
+
+**Why:** The three modules currently operate independently. Key workflows need connection points.
+
+### 5a: Skill Installation Path (Forge → Vault)
+
+Define and document how a forge-vetted skill enters the vault:
+- Manual transfer workflow (current: copy file into workspace)
+- Automated workflow (future: forge produces clearance report, vault accepts cleared skills)
+- Which shell level allows skill installation
+- How the vault verifies a skill was scanned by forge
+
+### 5b: Telegram Bot Token Proxy Injection
+
+The Telegram bot token currently enters the vault container directly (`compose.yml` line 51). For consistency with the "no secrets in the container" philosophy, investigate whether the proxy can inject it the same way it injects API keys — intercepting requests to `api.telegram.org` and adding the bot token.
+
+**Trade-off:** Complexity vs consistency. The bot token is revocable and lower-risk than API keys. This may be over-engineering.
+
+### 5c: Feed Scanning Integration (Pioneer → Vault)
+
+When Moltbook domains are eventually added to the allowlist (Soft Shell or later):
+- Define whether feed scanning happens in the proxy or the agent workspace
+- If proxy-level: vault-proxy.py calls pioneer's injection patterns on Moltbook API responses
+- If workspace-level: pioneer's patterns loaded as a workspace file for the agent to consult
+
+**This is not blocking anything now** — Moltbook domains are not in the allowlist.
+
+**Exit criteria:** Skill installation path documented and tested. Bot token decision made. Feed scanning plan documented for future implementation.
+
+---
+
+## Dependency Graph
+
+```
+Phase 1 (Docs cleanup)
+    ↓
+Phase 2 (Monitoring)
+    ↓
+Phase 3 (Split Shell completion)
+    ↓
+Phase 4 (Soft Shell design + implementation)
+    ↓
+Phase 5 (Cross-module integration)
+```
+
+Phases are sequential. Each phase's exit criteria must be met before starting the next. This follows the "slow and steady, monitor first" principle.
+
+---
+
+*This roadmap covers the openclaw-vault module only. See `clawhub-forge/docs/roadmap.md` and `moltbook-pioneer/docs/roadmap.md` for the other modules. See `docs/trifecta.md` in the lobster-trapp root for the cross-module strategy.*
