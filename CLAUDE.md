@@ -186,6 +186,11 @@ Validates: proxy DNS resolution, proxy TCP connectivity, read-only root, capabil
 - Do not guess at OpenClaw config syntax, tool behavior, or API formats — look it up or verify from source code
 - When official docs are insufficient, verify from the actual dist/ source bundles inside the container (see `docs/openclaw-internals.md` for methodology)
 
+### Security Model
+- **Each tool use is a potential injection attack vector.** Every tool added to the agent's capabilities expands the attack surface. Evaluate accordingly.
+- **No trust jumps.** Complete and test the current shell level fully before designing the next one. Each new capability must be individually verified.
+- **Shell levels are completed in order.** Hard Shell → Split Shell → Soft Shell. Never skip levels, never bundle multiple capability expansions.
+
 ### Spec-Driven Development
 - **Every new feature requires a written spec before implementation.** No exceptions.
 - Specs live in `docs/specs/` and must cover: purpose, security implications, implementation approach, and verification plan
@@ -204,4 +209,4 @@ Validates: proxy DNS resolution, proxy TCP connectivity, read-only root, capabil
 - Do not change `sandbox.mode` from `"off"` — the container IS the sandbox
 
 ---
-*Last updated: 2026-03-29 — Zero-trust mission, spec-driven development*
+*Last updated: 2026-03-30 — Security model, no trust jumps, injection vectors*
