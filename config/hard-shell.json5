@@ -79,7 +79,9 @@
     telegram: {
       dmPolicy: "pairing",
     },
+    // WhatsApp: disabled — not configured, causes health-monitor spam if enabled
     whatsapp: {
+      enabled: false,
       dmPolicy: "pairing",
     },
   },
