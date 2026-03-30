@@ -59,14 +59,16 @@ OpenClaw organizes tools into groups for bulk policy control:
 
 Profiles define a base set of available tools. Additional tools can be added/removed via `tools.allow` and `tools.deny` lists.
 
-| Profile | Tools Included | Notes |
+| Profile | Tools Included (per official docs) | Notes |
 |---|---|---|
-| `minimal` | message, read (read-only) | Does NOT include exec, write, edit, apply_patch, grep, find, ls, process |
-| `coding` | exec, read, write, edit, apply_patch, grep, find, ls, process | The developer profile — includes filesystem and shell access |
-| `messaging` | message + channel tools | Communication-focused |
-| `full` | All tools | **DEFAULT** — everything enabled |
+| `minimal` | `session_status` only | Extremely restricted — no messaging, no file access, no exec |
+| `coding` | `group:fs`, `group:runtime`, `group:sessions`, `group:memory`, `image` | Developer profile — filesystem, shell, sessions, memory |
+| `messaging` | `group:messaging`, `sessions_list`, `sessions_history`, `sessions_send`, `session_status` | Communication-focused |
+| `full` | No restriction (all tools) | **DEFAULT** — everything enabled |
 
-**Critical discovery (commit `7becfec`):** The `minimal` profile does NOT include `exec` in its base tool set. No amount of deny-list manipulation can ADD a tool the profile excludes. This is why Hard Shell (which uses `minimal`) could never have exec, and why Split Shell switched to `coding`.
+**Source:** Official docs at `docs.openclaw.ai/gateway/configuration-reference`
+
+**Critical discovery:** The `minimal` profile only includes `session_status`. Messaging works in Hard Shell not because of the profile, but because the Telegram channel integration operates independently of the tool profile. The `coding` profile includes `group:sessions` which we deny via `tools.deny` to prevent sub-agent spawning.
 
 **Profile interaction with deny/allow:**
 1. Profile sets the base tool set
@@ -108,10 +110,18 @@ Profiles define a base set of available tools. Additional tools can be added/rem
 
     exec: {
       security: "deny" | "allowlist" | "full",
-      ask: "always" | "when-unknown" | "never",
-      host: "gateway" | "sandbox",            // where commands execute
-      safeBins: ["cat", "echo", ...],         // pre-approved binaries
-      safeBinProfiles: { cat: {}, ... },      // REQUIRED — without profiles, safeBins silently dropped
+      ask: "always" | "on-miss" | "off",      // official values per docs.openclaw.ai
+      askFallback: "deny" | "allowlist" | "full", // fallback when no approval UI reachable
+      host: "auto" | "gateway" | "sandbox" | "node", // where commands execute
+      safeBins: ["cat", "echo", ...],         // pre-approved binaries (stdin-only per official docs)
+      safeBinProfiles: {                       // per-binary argument restrictions
+        "bin-name": {
+          minPositional: 0,                    // minimum required positional args
+          maxPositional: 2,                    // maximum allowed positional args
+          allowedValueFlags: ["--format"],     // flags explicitly allowed
+          deniedFlags: ["--execute"],          // flags explicitly blocked
+        },
+      },
     },
 
     elevated: {
@@ -160,7 +170,7 @@ Profiles define a base set of available tools. Additional tools can be added/rem
 | `telemetry.enabled` | `logging.redactSensitive` | Different approach |
 | `mdns.enabled` | Does not exist in schema | Removed from OpenClaw |
 | `pairing.mode` | `channels.<provider>.dmPolicy` | phase1-findings.md |
-| `tools.exec.strictInlineEval` | Does not exist in v2026.2.26 | Removed from schema |
+| `tools.exec.strictInlineEval` | Exists — forces reapproval for inline eval (`python -c`, `node -e`) | Official docs confirm; earlier testing on v2026.2.17 incorrectly reported it missing |
 
 ---
 
