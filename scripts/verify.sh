@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# OpenClaw-Vault: 15-Point Security Verification
+# OpenClaw-Vault: Security Verification (18 checks)
 #
-# Runs inside the openclaw-vault container to validate all security controls.
-# Can also be run from the host (it will exec into the container).
+# Validates all security controls. Runs from the host (execs into container).
+# Shell-aware: detects Hard Shell or Split Shell and verifies config accordingly.
+#
+# Checks 1-14:  Universal exoskeleton checks (same for all shells)
+# Checks 15-18: Shell-specific config verification (adapts to detected level)
 #
 # Usage: bash scripts/verify.sh
 
@@ -59,7 +62,7 @@ if ! $RUNTIME inspect "$CONTAINER" &>/dev/null; then
     exit 1
 fi
 
-echo "Running 15-point security check..."
+echo "Running security checks..."
 echo ""
 
 # 1. Network: can resolve proxy hostname (proves vault-internal DNS works)
@@ -129,10 +132,88 @@ else
     FAIL=$((FAIL + 1))
 fi
 
-# 15. Config integrity: exec security is deny (Hard Shell lockdown)
-# Config is now JSON5 at ~/.openclaw/openclaw.json
-check 15 "Config: exec security = deny" \
-    "grep '\"deny\"' /home/vault/.openclaw/openclaw.json"
+# 15-18. Shell-level config verification
+# Detect current shell level using proper JSON parsing, then verify
+# the config matches expected values for that level.
+
+echo ""
+echo "  Shell-level config verification:"
+
+# Extract key config values via python (safe JSON parsing, no fragile grep)
+config_json=$($RUNTIME exec "$CONTAINER" sh -c "cat /home/vault/.openclaw/openclaw.json 2>/dev/null") || config_json=""
+
+if [ -z "$config_json" ]; then
+    printf "  [%2d] %-50s FAIL\n" 15 "Config: readable"
+    echo "       Cannot read config file"
+    FAIL=$((FAIL + 1))
+else
+    # Parse config into shell variables
+    eval "$(echo "$config_json" | python3 -c "
+import sys, json
+c = json.loads(sys.stdin.read())
+t = c.get('tools', {})
+e = t.get('exec', {})
+a = c.get('agents', {}).get('defaults', {})
+print(f'CFG_PROFILE={t.get(\"profile\", \"unknown\")}')
+print(f'CFG_EXEC_SEC={e.get(\"security\", \"unknown\")}')
+print(f'CFG_EXEC_ASK={e.get(\"ask\", \"unknown\")}')
+print(f'CFG_EXEC_HOST={e.get(\"host\", \"unknown\")}')
+print(f'CFG_ELEVATED={t.get(\"elevated\", {}).get(\"enabled\", \"unknown\")}')
+print(f'CFG_SANDBOX={a.get(\"sandbox\", {}).get(\"mode\", \"unknown\")}')
+print(f'CFG_SAFEBINS_COUNT={len(e.get(\"safeBins\", []))}')
+print(f'CFG_SAFEBINPROFILES_COUNT={len(e.get(\"safeBinProfiles\", {}))}')
+print(f'CFG_DENY_COUNT={len(t.get(\"deny\", []))}')
+has_browser = \"browser\" in t.get(\"deny\", [])
+print(f'CFG_BROWSER_DENIED={has_browser}')
+" 2>/dev/null)"
+
+    # Determine shell level
+    SHELL_LEVEL="UNKNOWN"
+    if [ "$CFG_PROFILE" = "minimal" ] && [ "$CFG_EXEC_SEC" = "deny" ]; then
+        SHELL_LEVEL="HARD"
+    elif [ "$CFG_PROFILE" = "coding" ] && [ "$CFG_EXEC_SEC" = "allowlist" ] && [ "$CFG_EXEC_ASK" = "always" ] && [ "$CFG_BROWSER_DENIED" = "True" ]; then
+        SHELL_LEVEL="SPLIT"
+    fi
+
+    echo "  Detected shell level: $SHELL_LEVEL"
+    echo ""
+
+    if [ "$SHELL_LEVEL" = "HARD" ]; then
+        # Hard Shell checks — use node (python3 not available in container)
+        check 15 "Config: profile = minimal" \
+            "node -e \"const c=JSON.parse(require('fs').readFileSync('/home/vault/.openclaw/openclaw.json','utf8')); process.exit(c.tools.profile==='minimal'?0:1)\""
+
+        check 16 "Config: exec security = deny" \
+            "node -e \"const c=JSON.parse(require('fs').readFileSync('/home/vault/.openclaw/openclaw.json','utf8')); process.exit(c.tools.exec.security==='deny'?0:1)\""
+
+        check 17 "Config: elevated disabled" \
+            "node -e \"const c=JSON.parse(require('fs').readFileSync('/home/vault/.openclaw/openclaw.json','utf8')); process.exit(c.tools.elevated.enabled===false?0:1)\""
+
+        check 18 "Config: sandbox mode = off" \
+            "node -e \"const c=JSON.parse(require('fs').readFileSync('/home/vault/.openclaw/openclaw.json','utf8')); process.exit(c.agents.defaults.sandbox.mode==='off'?0:1)\""
+
+    elif [ "$SHELL_LEVEL" = "SPLIT" ]; then
+        # Split Shell checks — use node (python3 not available in container)
+        check 15 "Config: profile = coding" \
+            "node -e \"const c=JSON.parse(require('fs').readFileSync('/home/vault/.openclaw/openclaw.json','utf8')); process.exit(c.tools.profile==='coding'?0:1)\""
+
+        check 16 "Config: exec = allowlist + ask always" \
+            "node -e \"const c=JSON.parse(require('fs').readFileSync('/home/vault/.openclaw/openclaw.json','utf8')); const e=c.tools.exec; process.exit(e.security==='allowlist'&&e.ask==='always'?0:1)\""
+
+        check 17 "Config: exec host = gateway, elevated off" \
+            "node -e \"const c=JSON.parse(require('fs').readFileSync('/home/vault/.openclaw/openclaw.json','utf8')); process.exit(c.tools.exec.host==='gateway'&&c.tools.elevated.enabled===false?0:1)\""
+
+        # Verify safeBins and safeBinProfiles match (no orphans)
+        check 18 "Config: safeBins match safeBinProfiles" \
+            "node -e \"const c=JSON.parse(require('fs').readFileSync('/home/vault/.openclaw/openclaw.json','utf8')); const e=c.tools.exec; const bins=new Set(e.safeBins||[]); const profs=new Set(Object.keys(e.safeBinProfiles||{})); const missing=[...bins].filter(b=>!profs.has(b)); const extra=[...profs].filter(p=>!bins.has(p)); process.exit(missing.length===0&&extra.length===0?0:1)\""
+
+    else
+        printf "  [%2d] %-50s FAIL\n" 15 "Config: known shell level"
+        echo "       Shell level UNKNOWN — config does not match Hard or Split Shell"
+        echo "       profile=$CFG_PROFILE exec.security=$CFG_EXEC_SEC exec.ask=$CFG_EXEC_ASK"
+        FAIL=$((FAIL + 1))
+    fi
+fi
 
 echo ""
 echo "====================================="
