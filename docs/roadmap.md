@@ -194,21 +194,65 @@ When Moltbook domains are eventually added to the allowlist (Soft Shell or later
 
 ---
 
+---
+
+## Phase 6: Hardening — Trial Run Findings (2026-03-31)
+
+**Why:** Trial run with attack surface probing revealed vulnerabilities that must be fixed before the module is shippable. See `docs/specs/2026-03-31-trial-run-findings.md` for full details.
+
+### 6a: Config Read-Only Mount (CRITICAL)
+
+The agent can modify its own config (`~/.openclaw/openclaw.json`) from inside the container if it gains arbitrary code execution. OpenClaw hot-reloads changes, so a modified config takes effect immediately.
+
+**Fix:** Split the persistent volume into workspace (read-write) and config (read-only). Config only writable at startup and via `tool-control.sh --apply`.
+
+**Files:** `compose.yml`, `scripts/entrypoint.sh`, `scripts/tool-control.sh`
+
+### 6b: Strip Destructive Binaries from Image (MEDIUM)
+
+`/bin/rm` and other destructive binaries exist in the Alpine base image. Strip them in the Containerfile.
+
+**Files:** `Containerfile`
+
+### 6c: Formalize Attack Surface Tests (MEDIUM)
+
+The trial run probes should be an automated test script (`tests/test-attack-surfaces.sh`).
+
+**Files:** `tests/test-attack-surfaces.sh`
+
+**Exit criteria:** Config is read-only inside the container. `rm` not found. All attack surface probes pass as automated tests.
+
+---
+
+## Phase 7: Soft Shell Design + Implementation
+
+**Why:** Final shell level — broad autonomy with driver seat permanently locked. Requires full spec-driven process per our development principles.
+
+**Prerequisite:** Phase 6 complete (hardening fixes).
+
+**Deliverables:** Spec, config, manifest preset, tests, verification, documentation.
+
+---
+
+## Phase 8: Final Review + Certification
+
+**Why:** Holistic review of the entire module — code, docs, tests, attack surfaces. The module must be certifiably shippable.
+
+**Exit criteria:** All tests pass, all docs accurate, all attack surfaces probed and mitigated, tool control system fully operational across all three shell levels.
+
+---
+
 ## Dependency Graph
 
 ```
-Phase 1 (Docs cleanup)
+Phase 1-5 (COMPLETED)
     ↓
-Phase 2 (Monitoring)
+Phase 6 (Hardening — trial run findings)
     ↓
-Phase 3 (Split Shell completion)
+Phase 7 (Soft Shell design + implementation)
     ↓
-Phase 4 (Soft Shell design + implementation)
-    ↓
-Phase 5 (Cross-module integration)
+Phase 8 (Final review + certification)
 ```
-
-Phases are sequential. Each phase's exit criteria must be met before starting the next. This follows the "slow and steady, monitor first" principle.
 
 ---
 
