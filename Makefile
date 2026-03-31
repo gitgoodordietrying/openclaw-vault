@@ -1,4 +1,4 @@
-.PHONY: help setup start stop kill nuclear verify test network-report session-report log-rotate tools-status tools-dry-run hard-shell split-shell
+.PHONY: help setup start stop kill nuclear verify test network-report session-report log-rotate tools-status tools-dry-run hard-shell split-shell install-skill list-skills
 
 SHELL := /bin/bash
 
@@ -49,6 +49,12 @@ hard-shell: ## Switch to Hard Shell preset (maximum lockdown)
 
 split-shell: ## Switch to Split Shell preset (workspace I/O with approval)
 	@bash scripts/tool-control.sh --preset split --apply
+
+install-skill: ## Install a vetted skill (SKILL=<dir> [CLEARANCE=<report.json>])
+	@bash scripts/install-skill.sh $(SKILL) $(if $(CLEARANCE),--clearance $(CLEARANCE))
+
+list-skills: ## List installed skills in the workspace
+	@bash scripts/install-skill.sh --list
 
 network-report: ## Analyze proxy logs for security anomalies
 	@python3 monitoring/network-log-parser.py
