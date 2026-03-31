@@ -6,7 +6,7 @@
 
 ---
 
-## Phase 1: Documentation Cleanup
+## Phase 1: Documentation Cleanup — COMPLETED (2026-03-27)
 
 **Why:** Stale docs create confusion and waste time. Fix before building anything new.
 
@@ -23,7 +23,7 @@
 
 ---
 
-## Phase 2: Runtime Monitoring
+## Phase 2: Runtime Monitoring — COMPLETED (2026-03-27)
 
 **Why:** Before granting more autonomy (Soft Shell), we need full visibility into what Hum does. Monitor first, expand later.
 
@@ -89,7 +89,7 @@ Replace `monitoring/session-report.sh` stub with a real implementation.
 
 ---
 
-## Phase 3: Split Shell Completion
+## Phase 3: Split Shell Completion — COMPLETED (2026-03-30)
 
 **Why:** Split Shell works but has rough edges. Fix them before designing Soft Shell.
 
@@ -125,17 +125,18 @@ Currently all shells use the same 3-domain `proxy/allowlist.txt`. Future shells 
 - Returns non-zero if any fail
 - Works alongside `make verify` (which runs verify.sh)
 
-### 3d: `read-chat.sh` Improvements
+### 3d: `read-chat.sh` Improvements — DONE
 
-- Remove the 300-character truncation (line 58) — full messages are needed for monitoring
-- Add `--tool-calls` flag to show tool invocations (currently filtered out)
-- Add `--since TIMESTAMP` flag to show messages after a point in time
+- ~~Remove the 300-character truncation~~ — Rewritten: full messages displayed, no truncation
+- ~~Add `--tool-calls` flag~~ — Done: shows tool invocations with details
+- ~~Add `--since TIMESTAMP` flag~~ — Done: filter messages by timestamp
+- Added `--all` flag and `sanitize()` for terminal injection prevention
 
-**Exit criteria:** `verify.sh` passes on both Hard Shell and Split Shell. `make test` runs all tests. `read-chat.sh` shows full conversation with tool calls.
+**Exit criteria:** All met. `verify.sh` 23/23 on both shells. `make test` 12/12 pass. `read-chat.sh` shows full conversation with tool calls.
 
 ---
 
-## Phase 4: Soft Shell Design
+## Phase 4: Tool Control System — COMPLETED (2026-03-30)
 
 **Why:** Soft Shell is the next trust level — broader autonomy while the exoskeleton stays enforced. Requires a proper design process before implementation.
 
@@ -162,7 +163,7 @@ Currently all shells use the same 3-domain `proxy/allowlist.txt`. Future shells 
 
 ---
 
-## Phase 5: Cross-Module Integration
+## Phase 5: Cross-Module Integration — COMPLETED (2026-03-30)
 
 **Why:** The three modules currently operate independently. Key workflows need connection points.
 
