@@ -68,6 +68,8 @@ case "$1" in
     --nuclear)
         echo "[NUCLEAR KILL] Destroying isolation boundary..."
         echo ""
+        # Note: On Linux (no WSL/Hyper-V), nuclear is equivalent to hard kill.
+        # The WSL/Hyper-V sections below only activate on Windows environments.
 
         # Phase 2: WSL distro
         if command -v wsl.exe &>/dev/null; then

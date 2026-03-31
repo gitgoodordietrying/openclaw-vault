@@ -122,10 +122,13 @@ c = json.loads('''$SPLIT''')
 assert c['tools']['exec']['host'] == 'gateway'
 "
 
-check "Split: 16 safeBins" python3 -c "
-import json
+check "Split: safeBins count matches manifest" python3 -c "
+import json, yaml
 c = json.loads('''$SPLIT''')
-assert len(c['tools']['exec']['safeBins']) == 16, f'got {len(c[\"tools\"][\"exec\"][\"safeBins\"])}'
+m = yaml.safe_load(open('$MANIFEST'))
+expected = len(m['presets']['split']['safeBins'])
+actual = len(c['tools']['exec']['safeBins'])
+assert actual == expected, f'got {actual}, manifest says {expected}'
 "
 
 check "Split: safeBins match safeBinProfiles" python3 -c "

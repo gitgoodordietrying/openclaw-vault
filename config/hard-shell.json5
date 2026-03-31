@@ -78,6 +78,7 @@
   channels: {
     telegram: {
       dmPolicy: "pairing",
+      proxy: "http://vault-proxy:8080",
     },
     // WhatsApp: disabled — not configured, causes health-monitor spam if enabled
     whatsapp: {

@@ -61,7 +61,7 @@ Two-container stack (compose.yml):
 │  - NO internet (vault-internal only)        │
 │  - NO real API keys (placeholder only)      │
 │  - sandbox.mode="off" (container IS sandbox)│
-│  - Tool profile: coding (deny: browser, web) │
+│  - Tool profile: coding (see tool-manifest)  │
 │  - Telegram bot for user interaction        │
 └─────────────────────────────────────────────┘
 ```

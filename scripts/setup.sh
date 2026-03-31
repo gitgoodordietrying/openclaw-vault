@@ -57,6 +57,14 @@ else
     read -rsp "  ANTHROPIC_API_KEY: " ANTHROPIC_KEY
     echo ""
 
+    # Basic key format validation
+    if [ -z "$ANTHROPIC_KEY" ]; then
+        echo -e "${RED:-}ERROR: API key cannot be empty.${NC:-}"
+        exit 1
+    fi
+    # Strip any accidental whitespace or quotes
+    ANTHROPIC_KEY=$(echo "$ANTHROPIC_KEY" | tr -d ' "'"'")
+
     echo "Enter your OpenAI API key (optional, press Enter to skip):"
     read -rsp "  OPENAI_API_KEY: " OPENAI_KEY
     echo ""

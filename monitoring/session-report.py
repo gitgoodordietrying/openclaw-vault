@@ -245,12 +245,14 @@ def analyze_transcripts(raw_content):
                                 files_mentioned.add(sanitize(path))
 
             elif role == "toolResult":
-                # OpenClaw tool results are messages with role "toolResult"
+                # OpenClaw tool results are messages with role "toolResult".
+                # isError captures all tool errors (denied, failed, timeout),
+                # not just explicit user denials. Label accordingly.
                 is_error = msg.get("isError", False)
                 if is_error:
-                    approval_denied += 1
+                    approval_denied += 1  # Tool error (denial, failure, or timeout)
                 else:
-                    approval_allowed += 1
+                    approval_allowed += 1  # Tool succeeded
 
             elif role == "system":
                 system_messages += 1
@@ -359,13 +361,13 @@ def format_report(report):
         for fpath in report["files_mentioned"]:
             print(f"    {fpath}")
 
-    # --- Approvals ---
+    # --- Tool Results ---
     if report["approvals"]["allowed"] > 0 or report["approvals"]["denied"] > 0:
         print()
-        print(f"{bold}Approvals{nc}")
-        print(f"  Allowed: {report['approvals']['allowed']}")
+        print(f"{bold}Tool Results{nc}")
+        print(f"  Succeeded: {report['approvals']['allowed']}")
         if report["approvals"]["denied"] > 0:
-            print(f"  {yellow}Denied:  {report['approvals']['denied']}{nc}")
+            print(f"  {yellow}Failed/Denied: {report['approvals']['denied']}{nc}")
 
     # --- Assessment ---
     print()
@@ -374,7 +376,7 @@ def format_report(report):
     if report["malformed_lines"] > 0:
         issues.append(f"{report['malformed_lines']} malformed transcript lines")
     if report["approvals"]["denied"] > 0:
-        issues.append(f"{report['approvals']['denied']} tool calls were denied")
+        issues.append(f"{report['approvals']['denied']} tool calls failed or were denied")
 
     if issues:
         for issue in issues:

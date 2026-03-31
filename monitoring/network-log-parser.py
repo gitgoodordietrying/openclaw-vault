@@ -283,8 +283,12 @@ def analyze(entries, config):
         sorted_ts = sorted(stats["timestamps"])
         window_seconds = config["window"]
         spike_threshold = config["spike"]
-        # Sliding window: count requests in each window
+        # Sliding window: count requests in each window.
+        # Skip ahead after each spike to avoid duplicate overlapping reports.
+        skip_until = 0
         for i, ts in enumerate(sorted_ts):
+            if i < skip_until:
+                continue
             window_end = ts.timestamp() + window_seconds
             count = 0
             for j in range(i, len(sorted_ts)):
@@ -301,8 +305,8 @@ def analyze(entries, config):
                     "window_seconds": window_seconds,
                     "timestamp": ts.isoformat(),
                 })
-                # Skip ahead to avoid duplicate spike reports for overlapping windows
-                break
+                # Skip past this window to avoid overlapping reports
+                skip_until = i + count
 
     return findings, stats
 

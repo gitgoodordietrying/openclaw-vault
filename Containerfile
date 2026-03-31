@@ -37,7 +37,7 @@ RUN apk --no-cache add tini ca-certificates \
 COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf ../lib/node_modules/openclaw/openclaw.mjs /usr/local/bin/openclaw
 
-# Apply security patches — fix Telegram proxy bypass (upstream issue #30338).
+# Apply security patches — fix Telegram proxy bypass (upstream issue #30338, fix PR #30367).
 # This ensures ALL traffic (including Telegram) routes through the vault proxy.
 # See patches/fix-telegram-proxy.sh for full documentation.
 COPY patches/fix-telegram-proxy.sh /tmp/fix-telegram-proxy.sh
