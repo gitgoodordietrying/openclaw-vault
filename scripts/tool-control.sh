@@ -195,6 +195,152 @@ if enabled:
     echo ""
 }
 
+# --- Apply: generate config, install it, restart, verify ---
+do_apply() {
+    local preset="$1"
+    shift
+    local extra_args=("$@")
+
+    echo ""
+    echo -e "${BOLD}OpenClaw-Vault: Tool Control — Apply${NC}"
+    echo "====================================="
+    echo ""
+
+    # Detect compose command
+    local COMPOSE=""
+    if command -v "${RUNTIME}-compose" &>/dev/null; then
+        COMPOSE="${RUNTIME}-compose"
+    elif $RUNTIME compose version &>/dev/null 2>&1; then
+        COMPOSE="$RUNTIME compose"
+    fi
+    if [ -z "$COMPOSE" ]; then
+        echo -e "${RED}ERROR: No compose command found.${NC}" >&2
+        exit 1
+    fi
+
+    # Step 1: Generate config
+    echo "[tool-control] Generating config..."
+    local config_json
+    config_json=$(python3 "$CORE" --manifest "$MANIFEST" --preset "$preset" "${extra_args[@]}" --output config 2>&1) || {
+        echo -e "${RED}Config generation failed: $config_json${NC}"
+        exit 1
+    }
+
+    # Validate generated JSON
+    echo "$config_json" | python3 -c "import sys,json; json.loads(sys.stdin.read())" 2>/dev/null || {
+        echo -e "${RED}SECURITY: Generated config is not valid JSON. Aborting.${NC}"
+        exit 1
+    }
+
+    # Step 2: Generate allowlist
+    local allowlist
+    allowlist=$(python3 "$CORE" --manifest "$MANIFEST" --preset "$preset" "${extra_args[@]}" --output allowlist 2>&1) || {
+        echo -e "${RED}Allowlist generation failed: $allowlist${NC}"
+        exit 1
+    }
+
+    # Step 3: Generate risk assessment for display
+    local risk_json
+    risk_json=$(python3 "$CORE" --manifest "$MANIFEST" --preset "$preset" "${extra_args[@]}" --output risk 2>&1) || {
+        echo -e "${RED}Risk assessment failed: $risk_json${NC}"
+        exit 1
+    }
+
+    # Step 4: Show what's about to change and ask for confirmation
+    local score
+    score=$(echo "$risk_json" | python3 -c "import sys,json; print(json.loads(sys.stdin.read())['risk_score'])")
+    local enabled_count
+    enabled_count=$(echo "$risk_json" | python3 -c "import sys,json; print(json.loads(sys.stdin.read())['enabled_count'])")
+
+    echo -e "${YELLOW}About to apply:${NC}"
+    echo "  Preset: ${preset:-custom}"
+    echo "  Risk score: $score"
+    echo "  Enabled tools: $enabled_count"
+    echo ""
+    read -rp "Continue? [y/N] " confirm
+    if [ "${confirm,,}" != "y" ]; then
+        echo "Cancelled."
+        exit 0
+    fi
+
+    # Step 5: Write config via podman cp (container must exist, can be stopped)
+    # Strategy: use podman cp to write into the stopped container's volume.
+    # This avoids volume permission issues with Podman rootless.
+    echo ""
+    echo "[tool-control] Installing config..."
+    local config_tmp
+    config_tmp=$(mktemp /tmp/openclaw-config-XXXXXX.json)
+    echo "$config_json" > "$config_tmp"
+    $RUNTIME cp "$config_tmp" openclaw-vault:/home/vault/.openclaw/openclaw.json 2>/dev/null && {
+        echo "[tool-control] Config installed via container copy"
+    } || {
+        # Fallback: update the baked-in source config and rebuild
+        echo "[tool-control] Container copy failed — updating source config and rebuilding..."
+        cp "$config_tmp" "$VAULT_DIR/config/openclaw-hardening.json5"
+        $RUNTIME stop openclaw-vault vault-proxy 2>/dev/null || true
+        $RUNTIME build -t openclaw-vault -f "$VAULT_DIR/Containerfile" "$VAULT_DIR" 2>&1 | tail -3
+        $RUNTIME tag openclaw-vault openclaw-vault_vault 2>/dev/null || true
+    }
+    rm -f "$config_tmp"
+
+    # Step 6: Stop the full stack for clean restart
+    echo "[tool-control] Stopping containers for clean restart..."
+    cd "$VAULT_DIR"
+    $COMPOSE stop 2>/dev/null || $RUNTIME stop openclaw-vault vault-proxy 2>/dev/null || true
+
+    # Step 7: Write allowlist atomically (temp file + move)
+    echo "[tool-control] Updating proxy allowlist..."
+    local allowlist_path="$VAULT_DIR/proxy/allowlist.txt"
+    local allowlist_tmp="${allowlist_path}.tmp"
+    echo "$allowlist" > "$allowlist_tmp"
+    mv -f "$allowlist_tmp" "$allowlist_path"
+    echo "[tool-control] Allowlist updated"
+
+    # Step 8: Start the containers
+    echo "[tool-control] Starting containers..."
+    cd "$VAULT_DIR"
+    $COMPOSE up -d 2>/dev/null || {
+        echo -e "${RED}Failed to start containers${NC}"
+        exit 1
+    }
+
+    # Step 9: Wait for gateway
+    echo "[tool-control] Waiting for gateway (up to 90s)..."
+    for i in $(seq 1 90); do
+        if $RUNTIME logs openclaw-vault 2>&1 | grep -q "listening on ws://\|OpenClaw"; then
+            echo "[tool-control] Gateway ready (${i}s)"
+            break
+        fi
+        sleep 1
+    done
+
+    # Step 10: Wait for config to be rewritten as JSON by OpenClaw
+    echo "[tool-control] Waiting for config processing..."
+    sleep 5
+
+    # Step 11: Run verification
+    echo ""
+    echo -e "${BOLD}Security verification:${NC}"
+    bash "$VAULT_DIR/scripts/verify.sh" 2>&1 | grep -E 'PASS|FAIL|Results|ALL CHECKS'
+    local verify_exit=$?
+    echo ""
+
+    if [ $verify_exit -eq 0 ]; then
+        echo -e "${GREEN}${BOLD}Tool control applied successfully.${NC}"
+        echo ""
+        echo "  Preset: ${preset:-custom}"
+        echo "  Risk score: $score"
+        echo "  Enabled tools: $enabled_count"
+        echo ""
+        echo "  Run 'make tools-status' to see current tool status."
+    else
+        echo -e "${RED}${BOLD}WARNING: Verification failed after applying config.${NC}"
+        echo "  Review the output above. Run 'make verify' for full details."
+        exit 1
+    fi
+    echo ""
+}
+
 # --- Parse arguments ---
 MODE=""
 PRESET=""
@@ -277,9 +423,15 @@ case "$MODE" in
         fi
         ;;
     apply)
-        echo -e "${YELLOW}--apply not yet implemented (Step 3 of the plan).${NC}"
-        echo "Use --dry-run to preview the config."
-        exit 1
+        if [ -z "$PRESET" ] && [ -z "$FROM_FILE" ]; then
+            echo "ERROR: --preset or --from-file required for apply." >&2
+            exit 1
+        fi
+        if [ -n "$PRESET" ]; then
+            do_apply "$PRESET" "${EXTRA_ARGS[@]}"
+        else
+            do_apply "" "${EXTRA_ARGS[@]}"
+        fi
         ;;
     *)
         echo "ERROR: Specify --status, --dry-run, or --apply. Use --help for usage." >&2

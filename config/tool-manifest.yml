@@ -52,7 +52,7 @@ invariants:
   agents.defaults.sandbox.mode: "off"        # Container IS the sandbox
   tools.elevated.enabled: false              # Permanently disabled
   tools.fs.workspaceOnly: true               # Agent stays in workspace
-  tools.exec.askFallback: "deny"             # Deny if no approval UI
+  # Note: askFallback documented but rejected by OpenClaw 2026.2.26 Zod schema
   gateway.mode: "local"                      # Loopback only
   gateway.bind: "loopback"                   # No external access
   channels.telegram.dmPolicy: "pairing"      # Each user must pair

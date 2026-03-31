@@ -249,7 +249,8 @@ def generate_config(manifest, enabled_tools, preset_name=None):
             "exec": {
                 "security": exec_security,
                 "ask": exec_ask,
-                "askFallback": invariants["tools.exec.askFallback"],
+                # Note: askFallback is documented but not supported by OpenClaw 2026.2.26
+                # (Zod rejects it as "Unrecognized key"). Omitted from generated config.
                 "host": exec_host,
             },
             "elevated": {

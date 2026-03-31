@@ -48,7 +48,6 @@
     exec: {
       security: "deny",
       ask: "always",
-      askFallback: "deny",
       host: "sandbox",
     },
 

@@ -77,10 +77,8 @@
       // and taps Approve or Deny. No silent execution.
       ask: "always",
 
-      // "deny" = if no approval UI is reachable (Telegram down, no connected
-      // clients), commands are DENIED rather than silently allowed.
-      // This prevents the agent from executing commands when nobody is watching.
-      askFallback: "deny",
+      // Note: askFallback is documented in official docs but rejected by
+      // OpenClaw 2026.2.26 Zod schema as "Unrecognized key". Omitted.
 
       // "gateway" = commands run in the Gateway process (inside our container).
       // "sandbox" would try to spawn Docker (which doesn't exist).
