@@ -60,9 +60,21 @@ list_skills() {
     echo ""
 }
 
+# --- Validate skill name (prevent path traversal) ---
+validate_skill_name() {
+    local name="$1"
+    # Only allow alphanumeric, hyphens, underscores — no dots, slashes, spaces
+    if ! echo "$name" | grep -qE '^[a-zA-Z0-9_-]+$'; then
+        echo -e "${RED}SECURITY: Invalid skill name '$name'. Only letters, numbers, hyphens, underscores allowed.${NC}" >&2
+        exit 1
+    fi
+}
+
 # --- Remove a skill ---
 remove_skill() {
     local name="$1"
+    validate_skill_name "$name"
+
     echo ""
     echo -e "${BOLD}Remove Skill: $name${NC}"
     echo ""
