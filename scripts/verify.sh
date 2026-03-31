@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# OpenClaw-Vault: Security Verification (18 checks)
+# OpenClaw-Vault: Security Verification (23 checks)
 #
 # Validates all security controls. Runs from the host (execs into container).
 # Shell-aware: detects Hard Shell or Split Shell and verifies config accordingly.
 #
 # Checks 1-14:  Universal exoskeleton checks (same for all shells)
 # Checks 15-18: Shell-specific config verification (adapts to detected level)
+# Checks 19-23: Per-tool security checks (NEVER-enable, rm, interpreters, allowlist, risk)
 #
 # Usage: bash scripts/verify.sh
 
@@ -213,6 +214,115 @@ print(f'CFG_BROWSER_DENIED={has_browser}')
         echo "       profile=$CFG_PROFILE exec.security=$CFG_EXEC_SEC exec.ask=$CFG_EXEC_ASK"
         FAIL=$((FAIL + 1))
     fi
+fi
+
+# --- Per-tool security checks (19-23) ---
+# These run on the HOST using the config_json already extracted above.
+
+echo ""
+echo "  Per-tool security checks:"
+
+if [ -n "$config_json" ]; then
+
+    # Check 19: NEVER-enabled tools are in the deny list
+    printf "  [%2d] %-50s " 19 "NEVER-enable tools denied (gateway, nodes)"
+    result=$(echo "$config_json" | python3 -c "
+import sys, json
+c = json.loads(sys.stdin.read())
+deny = set(c.get('tools', {}).get('deny', []))
+never = ['gateway', 'nodes']
+missing = [t for t in never if t not in deny]
+if missing:
+    print(f'MISSING from deny list: {missing}')
+    sys.exit(1)
+print('ok')
+" 2>&1) && echo "PASS" && PASS=$((PASS + 1)) || {
+        echo "FAIL"
+        echo "       $result"
+        FAIL=$((FAIL + 1))
+    }
+
+    # Check 20: rm not in safeBins
+    printf "  [%2d] %-50s " 20 "rm NOT in safeBins (destructive — user-side)"
+    result=$(echo "$config_json" | python3 -c "
+import sys, json
+c = json.loads(sys.stdin.read())
+safebins = c.get('tools', {}).get('exec', {}).get('safeBins', [])
+if 'rm' in safebins:
+    print('FOUND rm in safeBins — destructive tool must not be agent-accessible')
+    sys.exit(1)
+if 'rmdir' in safebins:
+    print('FOUND rmdir in safeBins — destructive tool must not be agent-accessible')
+    sys.exit(1)
+print('ok')
+" 2>&1) && echo "PASS" && PASS=$((PASS + 1)) || {
+        echo "FAIL"
+        echo "       $result"
+        FAIL=$((FAIL + 1))
+    }
+
+    # Check 21: No interpreters in safeBins
+    printf "  [%2d] %-50s " 21 "No interpreters in safeBins"
+    result=$(echo "$config_json" | python3 -c "
+import sys, json
+c = json.loads(sys.stdin.read())
+safebins = set(c.get('tools', {}).get('exec', {}).get('safeBins', []))
+interpreters = {'sh', 'bash', 'node', 'python', 'python3', 'ruby', 'perl'}
+found = safebins & interpreters
+if found:
+    print(f'FOUND interpreters in safeBins: {sorted(found)}')
+    sys.exit(1)
+print('ok')
+" 2>&1) && echo "PASS" && PASS=$((PASS + 1)) || {
+        echo "FAIL"
+        echo "       $result"
+        FAIL=$((FAIL + 1))
+    }
+
+    # Check 22: Proxy allowlist contains only expected domains
+    printf "  [%2d] %-50s " 22 "Proxy allowlist — no unexpected domains"
+    proxy_allowlist=""
+    if $RUNTIME inspect "vault-proxy" --format '{{.State.Status}}' 2>/dev/null | grep -q "running"; then
+        proxy_allowlist=$($RUNTIME exec vault-proxy sh -c "cat /opt/vault/allowlist.txt 2>/dev/null" 2>&1) || proxy_allowlist=""
+    fi
+    if [ -n "$proxy_allowlist" ]; then
+        result=$(echo "$proxy_allowlist" | python3 -c "
+import sys
+# Known safe base domains
+base = {'api.anthropic.com', 'api.openai.com', 'api.telegram.org'}
+domains = set()
+for line in sys.stdin:
+    line = line.strip()
+    if line and not line.startswith('#'):
+        domains.add(line)
+unexpected = domains - base
+if unexpected:
+    print(f'Unexpected domains in allowlist: {sorted(unexpected)}')
+    sys.exit(1)
+print('ok')
+" 2>&1) && echo "PASS" && PASS=$((PASS + 1)) || {
+            echo "FAIL"
+            echo "       $result"
+            FAIL=$((FAIL + 1))
+        }
+    else
+        echo "SKIP (proxy not running)"
+        SKIP=$((SKIP + 1))
+    fi
+
+    # Check 23: Risk score report (informational — not pass/fail)
+    printf "  [%2d] %-50s " 23 "Risk score"
+    MANIFEST="$(cd "$(dirname "$0")/.." && pwd)/config/tool-manifest.yml"
+    CORE="$(cd "$(dirname "$0")/.." && pwd)/scripts/tool-control-core.py"
+    if [ -f "$MANIFEST" ] && [ -f "$CORE" ]; then
+        score=$(echo "$config_json" | python3 "$CORE" --manifest "$MANIFEST" --output status --status-json "$(echo "$config_json")" 2>/dev/null | python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('risk_score', '?'))" 2>/dev/null) || score="?"
+        echo "INFO ($score)"
+    else
+        echo "SKIP (manifest or core not found)"
+    fi
+
+else
+    echo "  Skipped — config not readable"
 fi
 
 echo ""
