@@ -425,6 +425,102 @@ audit_config() {
     fi
 }
 
+audit_tools() {
+    section "Tool Status"
+
+    if ! exec_in_vault "true" 2>/dev/null; then
+        echo "  Container not running — cannot check tool status"
+        return
+    fi
+
+    local MANIFEST="$VAULT_DIR/config/tool-manifest.yml"
+    local CORE="$VAULT_DIR/scripts/tool-control-core.py"
+
+    if [ ! -f "$MANIFEST" ] || [ ! -f "$CORE" ]; then
+        echo "  Tool manifest or core script not found — skipping"
+        return
+    fi
+
+    local config_json
+    config_json=$(exec_in_vault "cat /home/vault/.openclaw/openclaw.json 2>/dev/null") || {
+        echo "  Cannot read config from container"
+        return
+    }
+
+    # Use tool-control-core.py --status mode for per-tool analysis
+    local status_json
+    status_json=$(python3 "$CORE" --manifest "$MANIFEST" --output status --status-json "$config_json" 2>/dev/null) || {
+        echo "  Failed to analyze tool status"
+        return
+    }
+
+    echo "$status_json" | python3 -c "
+import sys, json
+
+s = json.loads(sys.stdin.read())
+
+# Colors
+colors = {'critical': '\033[1;31m', 'high': '\033[0;31m', 'medium': '\033[0;33m', 'low': '\033[0;36m'}
+nc = '\033[0m'
+green = '\033[0;32m'
+red = '\033[0;31m'
+yellow = '\033[1;33m'
+
+print(f'  Profile:        {s[\"profile\"]}')
+print(f'  Exec security:  {s[\"exec_security\"]}')
+print(f'  SafeBins:       {s[\"safeBins_count\"]}')
+print(f'  Risk score:     {s[\"risk_score\"]}')
+print(f'  Enabled tools:  {s[\"enabled_count\"]} of {len(s[\"tools\"])}')
+print()
+
+enabled = []
+denied = []
+never = []
+
+for name, t in sorted(s['tools'].items()):
+    if t['status'] == 'ENABLED':
+        enabled.append((name, t))
+    elif t['status'] == 'NEVER':
+        never.append((name, t))
+    else:
+        denied.append((name, t))
+
+if enabled:
+    print(f'  {green}Enabled:{nc}')
+    for name, t in enabled:
+        c = colors.get(t['risk'], '')
+        print(f'    {c}{t[\"risk\"]:<10}{nc} {name:<22} {t[\"description\"]}')
+    print()
+
+if denied:
+    print(f'  Denied:')
+    for name, t in denied:
+        print(f'    {\"\":<10} {name:<22} {t[\"description\"]}')
+    print()
+
+if never:
+    print(f'  {red}NEVER enabled:{nc}')
+    for name, t in never:
+        c = colors.get(t['risk'], '')
+        print(f'    {c}{t[\"risk\"]:<10}{nc} {name:<22} {t[\"description\"]}')
+    print()
+
+# Security flags
+safebins = []
+for name, t in s['tools'].items():
+    if t['status'] == 'NEVER':
+        # Check if it's actually in the deny list (verify enforcement)
+        pass  # This is handled by verify.sh checks 19-23
+
+if s['risk_score'] > 0.5:
+    print(f'  {yellow}WARNING: Risk score above 0.5 — high autonomy level{nc}')
+elif s['risk_score'] == 0.0:
+    print(f'  {green}Maximum lockdown — no tools enabled{nc}')
+else:
+    print(f'  {green}Risk score within normal range{nc}')
+"
+}
+
 audit_injection() {
     section "Prompt Injection Scan"
 
@@ -557,6 +653,10 @@ case "$MODE" in
         print_banner
         audit_config
         ;;
+    --tools)
+        print_banner
+        audit_tools
+        ;;
     --injection)
         print_banner
         audit_injection
@@ -569,13 +669,14 @@ case "$MODE" in
         audit_sessions
         audit_network
         audit_config
+        audit_tools
         audit_injection
         echo ""
         echo -e "${BOLD}=============================="
         echo -e "Audit complete.${NC}"
         ;;
     *)
-        echo "Usage: $0 [--full|--changes|--diff FILE|--memory|--sessions|--network|--config|--injection|--all]"
+        echo "Usage: $0 [--full|--changes|--diff FILE|--memory|--sessions|--network|--config|--tools|--injection|--all]"
         echo ""
         echo "  --full       Full workspace listing with sizes and timestamps"
         echo "  --changes    Files created or modified since last audit"
@@ -584,6 +685,7 @@ case "$MODE" in
         echo "  --sessions   Show session transcript summaries"
         echo "  --network    Parse proxy logs (domains, blocked, payload sizes)"
         echo "  --config     Verify running config matches expected shell level"
+        echo "  --tools      Per-tool status (enabled/denied/never, risk score)"
         echo "  --injection  Scan workspace for prompt injection patterns"
         echo "  --all        Run all of the above (default)"
         exit 1
