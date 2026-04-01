@@ -156,6 +156,67 @@ presets:
       - tee
     extra_domains: []
 
+  soft:
+    score: 0.34
+    description: "The safari — broad autonomy, safeBins auto-approve, absolute moat"
+    profile: coding
+    exec_security: "allowlist"
+    exec_ask: "on-miss"
+    exec_host: "gateway"
+    enabled_tools:
+      # All Split Shell tools
+      - read
+      - write
+      - edit
+      - apply_patch
+      - exec
+      - grep
+      - find
+      - ls
+      - memory_search
+      - memory_get
+      - image
+      # New in Soft Shell
+      - web_search
+      - web_fetch
+      - cron
+      - process
+      - canvas
+      - message
+    safeBins:
+      # All Split Shell safeBins (16)
+      - cat
+      - echo
+      - mkdir
+      - cp
+      - mv
+      - touch
+      - date
+      - head
+      - tail
+      - wc
+      - sort
+      - uniq
+      - tr
+      - cut
+      - jq
+      - tee
+      # New in Soft Shell (12)
+      - grep
+      - sed
+      - awk
+      - diff
+      - xargs
+      - basename
+      - dirname
+      - env
+      - true
+      - false
+      - test
+      - printf
+    extra_domains:
+      - raw.githubusercontent.com    # Read public GitHub repos (skill source review)
+
 # --- TOOL DEFINITIONS ---
 # Every tool the agent can potentially use.
 # risk: critical | high | medium | low
