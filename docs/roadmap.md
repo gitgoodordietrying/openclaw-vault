@@ -224,13 +224,36 @@ The trial run probes should be an automated test script (`tests/test-attack-surf
 
 ---
 
-## Phase 7: Soft Shell Design + Implementation
+## Phase 7: Soft Shell — The Safari
 
-**Why:** Final shell level — broad autonomy with driver seat permanently locked. Requires full spec-driven process per our development principles.
+**Why:** The agent becomes genuinely useful — not just a chatbot, but an autonomous assistant. Web search, scheduling, file processing, content automation, all within an absolute moat.
 
-**Prerequisite:** Phase 6 complete (hardening fixes).
+**Spec:** `docs/specs/2026-03-31-soft-shell-design.md`
 
-**Deliverables:** Spec, config, manifest preset, tests, verification, documentation.
+**Prerequisite:** Phase 6 complete (hardening fixes). DONE.
+
+### What Changes from Split Shell
+
+| Aspect | Split Shell | Soft Shell |
+|---|---|---|
+| Tools enabled | 11 | 17 (+web_search, web_fetch, cron, process, canvas, message) |
+| Exec approval | ask: "always" (every command) | ask: "on-miss" (safeBins auto-approve) |
+| SafeBins | 16 | 28 (+grep, sed, awk, diff, xargs, basename, dirname, etc.) |
+| Proxy domains | 3 (base only) | 4+ (base + raw.githubusercontent.com, user-configurable) |
+| Risk score | 0.18 | 0.45 |
+
+### Implementation Steps
+
+| Step | What | Files |
+|---|---|---|
+| 7a | Add `soft` preset to tool-manifest.yml | config/tool-manifest.yml |
+| 7b | Create config/soft-shell.json5 | config/soft-shell.json5 |
+| 7c | Update tool-control-core.py for soft preset | scripts/tool-control-core.py |
+| 7d | Update verify.sh for Soft Shell detection | scripts/verify.sh |
+| 7e | Test: apply, verify, attack probes, round-trip | All test scripts |
+| 7f | Update docs: CLAUDE.md, README.md, openclaw-reference.md | Docs |
+
+**Exit criteria:** `make soft-shell` applies Soft Shell, 24/24 verify PASS, all attack surface probes pass, round-trip Hard→Split→Soft→Split→Hard all pass. Hum can search the web and schedule tasks via Telegram.
 
 ---
 
