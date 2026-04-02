@@ -4,6 +4,11 @@
 **From:** openclaw-vault (certified, all 8 phases complete)
 **To:** clawhub-forge (next module to polish)
 
+> **NOTE (2026-04-02):** The authoritative design document for clawhub-forge is now
+> `clawhub-forge/docs/forge-identity-and-design.md`. It defines the forge's identity
+> (Shield/Anvil/Stamp), the CDR innovation, the 5-phase roadmap, and all resolved
+> design decisions. The roadmap below is superseded by that document's Phase 2-3.
+
 ---
 
 ## What Was Done in openclaw-vault
