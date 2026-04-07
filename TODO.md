@@ -15,16 +15,14 @@ Skill scanning was removed from this module — it belongs in clawhub-forge (`to
 
 ---
 
-## Phase 2 VM Isolation Stubs
+## VM Isolation Stubs (Phase 9+ — Aspirational)
 
-These scripts exist for future Hyper-V and WSL isolation (beyond containers). Config files are real; scripts are placeholder:
+These scripts exist for future Hyper-V and WSL isolation (beyond containers). Config files are real; scripts are placeholder. Container-based isolation (Phases 1-8) is complete and certified. VM-level isolation is a future enhancement for Windows users who want defense-in-depth beyond containers.
 
-- [ ] `hyperv/create-vm.ps1` — Placeholder, prints "not yet implemented"
-- [ ] `hyperv/provision.ps1` — Placeholder, prints "not yet implemented"
-- [ ] `wsl/wsl-setup.ps1` — Placeholder, prints "not yet implemented"
-- [ ] `wsl/wsl-teardown.ps1` — Placeholder, prints "not yet implemented"
-
-Not blocking anything — these are aspirational.
+- [ ] `hyperv/create-vm.ps1` — Placeholder
+- [ ] `hyperv/provision.ps1` — Placeholder
+- [ ] `wsl/wsl-setup.ps1` — Placeholder
+- [ ] `wsl/wsl-teardown.ps1` — Placeholder
 
 ---
 
