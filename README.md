@@ -6,7 +6,7 @@ You've decided to run [OpenClaw](https://github.com/anthropics/openclaw). This m
 
 **Author**: [@albertdobmeyer](https://github.com/albertdobmeyer)
 
-**The headline feature:** your API key never enters the container. A proxy sidecar injects it into outbound requests at the network layer. Even with full container compromise, `env | grep API` returns nothing. No other hardening guide does this.
+**The headline feature:** your API key is kept outside the container. A proxy sidecar injects it into outbound requests at the network layer. Even with full container compromise, `env | grep API` returns nothing. No other hardening guide does this.
 
 ### What is OpenClaw?
 
@@ -55,7 +55,7 @@ This isn't theoretical. All of this happened in one week (Jan 28 – Feb 3, 2026
 | **Database breach** | 1.5M API tokens, 35K emails exposed — Supabase RLS was disabled entirely |
 | **21,639 instances exposed** | On the public internet, most with no authentication |
 
-Every other hardening guide puts the API key inside the container as an environment variable. A compromised process reads it from `/proc/self/environ`. The OpenClaw-Vault solves this with proxy-side injection: the container talks to `http://vault-proxy:8080`, the proxy checks the domain allowlist, injects the auth header, and forwards. The container never sees the key.
+Every other hardening guide puts the API key inside the container as an environment variable. A compromised process reads it from `/proc/self/environ`. The OpenClaw-Vault solves this with proxy-side injection: the container talks to `http://vault-proxy:8080`, the proxy checks the domain allowlist, injects the auth header, and forwards. The container does not have access to the real key.
 
 For a deep dive into the threat landscape, see the [Security Analysis Compilation](https://github.com/albertdobmeyer/openclaw-research/blob/main/docs/security-report.md) in the companion research repository.
 
@@ -71,7 +71,7 @@ For a deep dive into the threat landscape, see the [Security Analysis Compilatio
 
 ## What This Is (and What It Is Not)
 
-**The OpenClaw-Vault is a safe exploration tool.** It lets you run a Moltbook agent, interact with it via Telegram, observe the agent ecosystem, experiment with system prompts and personas, and prototype agentic workflows — all inside a hardened container that can't access your files, your accounts, or unauthorized network destinations.
+**The OpenClaw-Vault is a safe exploration tool.** It lets you run a Moltbook agent, interact with it via Telegram, observe the agent ecosystem, experiment with system prompts and personas, and prototype agentic workflows — all inside a hardened container that is configured to block access to your files, your accounts, and unauthorized network destinations.
 
 **The OpenClaw-Vault is not an agentic workstation.** The features that make OpenClaw a "personal AI assistant" — managing your email, reading your files, controlling your browser, sending WhatsApp messages on your behalf — are deliberately disabled. Those features require host-level access, which is exactly what the OpenClaw-Vault prevents. If you want OpenClaw to manage your life, you accept the full risk surface. The OpenClaw-Vault is deliberately not that.
 
@@ -98,7 +98,7 @@ The OpenClaw-Vault is the best container-level isolation available for OpenClaw.
 
 ### Tier 1: Disposable Cloud VM — strongest, recommended
 
-Run the OpenClaw-Vault on a $6/month DigitalOcean, Hetzner, or Linode droplet. Separate kernel, separate network, zero relationship to your personal infrastructure. If compromised, the attacker is on a disposable VM with nothing on it. They can't reach your home network, your other machines, or anything real. Destroy and rebuild in minutes.
+Run the OpenClaw-Vault on a $6/month DigitalOcean, Hetzner, or Linode droplet. Separate kernel, separate network, zero relationship to your personal infrastructure. If compromised, the attacker is on a disposable VM with nothing on it. They are isolated from your home network, your other machines, and anything real. Destroy and rebuild in minutes.
 
 **Choose this if:** you take the threat landscape seriously, plan to run agents unattended, or want true infrastructure isolation.
 
@@ -110,7 +110,7 @@ Run the OpenClaw-Vault inside VirtualBox, Hyper-V, or UTM on your local machine.
 
 ### Tier 3: Container on your local machine — good, default
 
-This is what the OpenClaw-Vault provides out of the box. The container can't see your files (no host mounts), can't reach unauthorized domains (proxy allowlist), and can't escalate privileges (capabilities dropped, seccomp enforced, non-root user). When you kill the stack, the agent's session data is destroyed.
+This is what the OpenClaw-Vault provides out of the box. The container does not have access to your files (no host mounts), is restricted from reaching unauthorized domains (proxy allowlist), and has mechanisms to prevent privilege escalation (capabilities dropped, seccomp enforced, non-root user). When you kill the stack, the agent's session data is destroyed.
 
 **However:** the container shares your host kernel. A kernel exploit — unlikely but not impossible — would put the attacker on your actual machine. The container runtime stores metadata and layer caches on the host that survive container destruction. And during a live session, a compromised agent could exfiltrate data through allowed domains before you hit the kill switch.
 
@@ -118,7 +118,7 @@ This is what the OpenClaw-Vault provides out of the box. The container can't see
 
 ### What about dedicating an empty drive?
 
-No. An empty drive doesn't give you kernel isolation, which is the actual security gap. The container already can't access your other drives because there are no host volume mounts. Moving the Docker data directory to a separate drive just relocates the container layer cache — it doesn't change the security boundary. If you want more isolation than Tier 3, use a VM (Tier 2) or a cloud droplet (Tier 1), not a different disk.
+No. An empty drive doesn't give you kernel isolation, which is the actual security gap. The container already has no access to your other drives because there are no host volume mounts. Moving the Docker data directory to a separate drive just relocates the container layer cache — it doesn't change the security boundary. If you want more isolation than Tier 3, use a VM (Tier 2) or a cloud droplet (Tier 1), not a different disk.
 
 ---
 
@@ -174,7 +174,7 @@ bash scripts/verify.sh
 
 ### Data in and out
 
-No host filesystem mounts by default. This is intentional — a compromised container can't touch your files.
+No host filesystem mounts by default. This is intentional — a compromised container is prevented from directly accessing your files.
 
 ```bash
 # Drop files into the container
@@ -208,17 +208,17 @@ bash scripts/verify.sh
 |---|-------|---------------|
 | 1 | Proxy DNS resolves | Network routing through sidecar works |
 | 2 | Proxy TCP connects | Proxy is accepting connections |
-| 3 | Root filesystem read-only | Can't persist malware to image |
+| 3 | Root filesystem read-only | Prevents persisting malware to image |
 | 4 | Capabilities dropped | No raw sockets, no privilege escalation |
-| 5 | Host mounts not accessible | Container can't read your files |
+| 5 | Host mounts not accessible | Container has no access to host files |
 | 6 | Windows interop disabled | No `cmd.exe` escape from WSL |
 | 7 | API keys absent from env | Proxy-side injection confirmed |
-| 8 | Docker socket not mounted | Can't spawn sibling containers |
+| 8 | Docker socket not mounted | Prevents spawning sibling containers |
 | 9 | sudo unavailable | No privilege escalation path |
 | 10 | Running as non-root (uid 1000) | Principle of least privilege |
 | 11 | Seccomp profile loaded | Custom syscall filter active |
-| 12 | Noexec on /tmp | Can't execute dropped payloads |
-| 13 | No-new-privileges set | Setuid binaries can't escalate |
+| 12 | Noexec on /tmp | Prevents executing dropped payloads |
+| 13 | No-new-privileges set | Setuid binaries prevented from escalating |
 | 14 | PID limit active | Fork bombs contained |
 
 **Checks 15-18: Shell-specific** (adapts to detected Hard Shell, Split Shell, or Soft Shell)
@@ -234,7 +234,7 @@ bash scripts/verify.sh
 
 | # | Check | What it proves |
 |---|-------|---------------|
-| 19 | NEVER-enable tools denied | gateway, nodes, bash always in deny list |
+| 19 | NEVER-enable tools denied | gateway, nodes, bash permanently in deny list |
 | 20 | rm not in safeBins | Agent is constructive only — no deletion |
 | 21 | No interpreters in safeBins | sh, bash, node, python blocked |
 | 22 | Proxy allowlist clean | Only expected domains, nothing extra |
@@ -365,7 +365,7 @@ The OpenClaw-Vault is the infrastructure that emerged from understanding the pro
 >
 > We are not responsible for financial losses from API key abuse, data loss or corruption, security breaches from misconfiguration or unpatched vulnerabilities, malicious skills or payloads, or anything that happens after you type `./setup.sh`.
 >
-> **You are the operator. You own the risk.** If your threat model requires guaranteed isolation, run this on a disposable VM with a disposable API key and a hard spending cap. If you don't understand that sentence, this tool is not for you.
+> **You are the operator. You own the risk.** If your threat model requires the strongest available isolation, run this on a disposable VM with a disposable API key and a hard spending cap. If you don't understand that sentence, this tool is not for you.
 
 ## License
 
