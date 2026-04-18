@@ -79,10 +79,11 @@ commands:
       display: terminal
     available_when: [stopped]
     sort_order: 20
+    tier: user
     timeout_seconds: 120
 
   - id: soft-stop
-    name: Soft Stop
+    name: Stop Assistant
     description: Gracefully stop the vault container
     group: lifecycle
     type: action
@@ -93,6 +94,7 @@ commands:
       display: terminal
     available_when: [running]
     sort_order: 30
+    tier: user
     timeout_seconds: 60
 
   - id: hard-kill
@@ -125,7 +127,7 @@ commands:
 
   # Monitoring
   - id: verify
-    name: Verify
+    name: Security Check
     description: Run security verification checks on the container
     group: monitoring
     type: query
@@ -135,6 +137,7 @@ commands:
       format: ansi
       display: checklist
     sort_order: 10
+    tier: user
     timeout_seconds: 60
 
   - id: install-skill
@@ -158,7 +161,7 @@ commands:
     timeout_seconds: 30
 
   - id: approve-pairing
-    name: Approve Telegram Pairing
+    name: Connect Telegram
     description: "Approve a Telegram user to chat with your assistant. Open Telegram, message your bot, and enter the pairing code shown there."
     group: operations
     type: action
@@ -175,6 +178,7 @@ commands:
       display: log
     available_when: [running]
     sort_order: 16
+    tier: user
     timeout_seconds: 15
 
   - id: logs
