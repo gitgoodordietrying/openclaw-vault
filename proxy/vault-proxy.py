@@ -22,6 +22,7 @@ import ipaddress
 import json
 import logging
 import os
+import re
 import signal
 import time
 from pathlib import Path
@@ -33,6 +34,10 @@ ALLOWLIST_PATH = Path("/opt/vault/allowlist.txt")
 EXFIL_THRESHOLD_BYTES = 1 * 1024 * 1024  # 1 MB — block large outbound payloads
 EXFIL_RESPONSE_THRESHOLD_BYTES = 10 * 1024 * 1024  # 10 MB — block large responses
 ANTHROPIC_API_VERSION = os.environ.get("ANTHROPIC_API_VERSION", "2023-06-01")
+
+# Telegram Bot API embeds the token in the URL path: https://api.telegram.org/bot<id>:<hash>/<method>
+# Redact before logging so tokens never hit stdout or the requests.jsonl file.
+BOT_TOKEN_PATH_RE = re.compile(r"(/bot)\d+:[A-Za-z0-9_-]{20,}")
 
 
 class VaultProxy:
@@ -105,6 +110,16 @@ class VaultProxy:
         event["timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.logger.info(json.dumps(event, default=str))
 
+    @staticmethod
+    def _redact_url(url: str) -> str:
+        # Bot-token-in-URL pattern is specific to Telegram; add others here if needed.
+        return BOT_TOKEN_PATH_RE.sub(r"\1<REDACTED_BOT_TOKEN>", url)
+
+    def running(self):
+        # Silence mitmproxy's built-in per-flow summary prints, which also contain the
+        # Telegram token in the URL and bypass our _log_event redaction path.
+        ctx.options.flow_detail = 0
+
     def request(self, flow: http.HTTPFlow):
         """Intercept outbound requests: allowlist check, size check, API key injection."""
         host = flow.request.pretty_host
@@ -116,7 +131,7 @@ class VaultProxy:
             self._log_event({
                 "action": "BLOCKED",
                 "method": method,
-                "url": url,
+                "url": self._redact_url(url),
                 "host": host,
                 "reason": "domain not in allowlist",
             })
@@ -138,7 +153,7 @@ class VaultProxy:
             self._log_event({
                 "action": "EXFIL_BLOCKED",
                 "method": method,
-                "url": url,
+                "url": self._redact_url(url),
                 "request_bytes": request_size,
                 "reason": f"outbound payload exceeds {EXFIL_THRESHOLD_BYTES} bytes",
             })
@@ -175,7 +190,7 @@ class VaultProxy:
         self._log_event({
             "action": "ALLOWED",
             "method": method,
-            "url": url,
+            "url": self._redact_url(url),
             "host": host,
             "request_bytes": request_size,
         })
@@ -189,7 +204,7 @@ class VaultProxy:
             if response_size > EXFIL_RESPONSE_THRESHOLD_BYTES:
                 self._log_event({
                     "action": "LARGE_RESPONSE_BLOCKED",
-                    "url": flow.request.pretty_url,
+                    "url": self._redact_url(flow.request.pretty_url),
                     "response_bytes": response_size,
                     "reason": "response exceeds 10 MB threshold",
                 })
@@ -224,7 +239,7 @@ class VaultProxy:
                 if redacted:
                     self._log_event({
                         "action": "KEY_REFLECTED",
-                        "url": flow.request.pretty_url,
+                        "url": self._redact_url(flow.request.pretty_url),
                         "env_var": env_var,
                         "reason": "API key found in response — redacted",
                     })
@@ -232,7 +247,7 @@ class VaultProxy:
             # --- 3. Log response metadata ---
             self._log_event({
                 "action": "RESPONSE",
-                "url": flow.request.pretty_url,
+                "url": self._redact_url(flow.request.pretty_url),
                 "status": flow.response.status_code,
                 "response_bytes": response_size,
             })
