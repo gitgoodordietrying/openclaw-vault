@@ -57,6 +57,20 @@
     // find, ls, process, and groups: fs, runtime, sessions, memory.
     // We deny what we don't want from this broad set.
     profile: "coding",
+
+    // F11: tools with profiles:[] in OpenClaw's tool catalog (web_fetch,
+    // web_search, cron, canvas, message) are NOT auto-allowed by the
+    // "coding" profile. They must be listed in alsoAllow or the agent
+    // never sees them. The generator emits this list from the soft preset's
+    // also_allow field in tool-manifest.yml — keep this block in sync there.
+    alsoAllow: [
+      "web_fetch",     // Fetch URL content (raw.githubusercontent.com etc)
+      "web_search",    // Search the web
+      "cron",          // Schedule persistent jobs
+      "canvas",        // Visual workspace
+      "message",       // Send on authorized channels
+    ],
+
     deny: [
       // The moat — NEVER enabled:
       "gateway",            // Agent cannot modify its own security

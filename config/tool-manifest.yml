@@ -163,6 +163,18 @@ presets:
     exec_security: "allowlist"
     exec_ask: "on-miss"
     exec_host: "gateway"
+    # F11 fix: tools listed below have profiles:[] in OpenClaw's tool catalog,
+    # meaning they're NOT auto-allowed by ANY profile (including "coding").
+    # Without explicit alsoAllow, the agent never sees them — even when listed
+    # in enabled_tools. The generator emits these as tools.alsoAllow in the
+    # generated openclaw.json. Each entry MUST also appear in enabled_tools
+    # (the generator filters the intersection — defense in depth).
+    also_allow:
+      - web_fetch
+      - web_search
+      - cron
+      - canvas
+      - message
     enabled_tools:
       # All Split Shell tools
       - read

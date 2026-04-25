@@ -158,6 +158,112 @@ assert c['tools']['fs']['workspaceOnly'] == True
 "
 echo ""
 
+# --- Preset: Soft Shell (F11 — alsoAllow for tools with empty profiles) ---
+echo "  Soft Shell preset:"
+SOFT=$(python3 "$CORE" --manifest "$MANIFEST" --preset soft --output config 2>&1)
+
+check "Soft: valid JSON" python3 -c "import json; json.loads('''$SOFT''')"
+
+check "Soft: profile = coding" python3 -c "
+import json
+c = json.loads('''$SOFT''')
+assert c['tools']['profile'] == 'coding', f'got {c[\"tools\"][\"profile\"]}'
+"
+
+check "Soft: exec.security = allowlist" python3 -c "
+import json
+c = json.loads('''$SOFT''')
+assert c['tools']['exec']['security'] == 'allowlist'
+"
+
+check "Soft: exec.ask = on-miss" python3 -c "
+import json
+c = json.loads('''$SOFT''')
+assert c['tools']['exec']['ask'] == 'on-miss', f'got {c[\"tools\"][\"exec\"][\"ask\"]}'
+"
+
+# F11 fix: tools with profiles:[] in OpenClaw must be alsoAllow'd explicitly.
+check "Soft: alsoAllow contains web_fetch (F11)" python3 -c "
+import json
+c = json.loads('''$SOFT''')
+assert 'web_fetch' in c['tools'].get('alsoAllow', []), f'alsoAllow={c[\"tools\"].get(\"alsoAllow\")}'
+"
+
+check "Soft: alsoAllow contains web_search (F11)" python3 -c "
+import json
+c = json.loads('''$SOFT''')
+assert 'web_search' in c['tools'].get('alsoAllow', [])
+"
+
+check "Soft: alsoAllow contains cron (F11)" python3 -c "
+import json
+c = json.loads('''$SOFT''')
+assert 'cron' in c['tools'].get('alsoAllow', [])
+"
+
+check "Soft: alsoAllow contains canvas (F11)" python3 -c "
+import json
+c = json.loads('''$SOFT''')
+assert 'canvas' in c['tools'].get('alsoAllow', [])
+"
+
+check "Soft: alsoAllow contains message (F11)" python3 -c "
+import json
+c = json.loads('''$SOFT''')
+assert 'message' in c['tools'].get('alsoAllow', [])
+"
+
+check "Soft: alsoAllow tools are subset of enabled_tools" python3 -c "
+import json, yaml
+c = json.loads('''$SOFT''')
+m = yaml.safe_load(open('$MANIFEST'))
+also = set(c['tools'].get('alsoAllow', []))
+enabled = set(m['presets']['soft']['enabled_tools'])
+assert also.issubset(enabled), f'alsoAllow has tools not in enabled_tools: {also - enabled}'
+"
+
+check "Soft: alsoAllow does not overlap deny list" python3 -c "
+import json
+c = json.loads('''$SOFT''')
+also = set(c['tools'].get('alsoAllow', []))
+deny = set(c['tools']['deny'])
+assert not (also & deny), f'alsoAllow overlaps deny: {also & deny}'
+"
+
+check "Soft: gateway not in alsoAllow (NEVER)" python3 -c "
+import json
+c = json.loads('''$SOFT''')
+assert 'gateway' not in c['tools'].get('alsoAllow', [])
+"
+
+check "Soft: bash not in alsoAllow (NEVER)" python3 -c "
+import json
+c = json.loads('''$SOFT''')
+assert 'bash' not in c['tools'].get('alsoAllow', [])
+"
+
+check "Hard: no alsoAllow field (or empty)" python3 -c "
+import json
+c = json.loads('''$HARD''')
+also = c['tools'].get('alsoAllow', [])
+assert also == [], f'unexpected alsoAllow in Hard: {also}'
+"
+
+check "Split: no alsoAllow field (or empty)" python3 -c "
+import json
+c = json.loads('''$SPLIT''')
+also = c['tools'].get('alsoAllow', [])
+assert also == [], f'unexpected alsoAllow in Split: {also}'
+"
+
+check "Manifest: soft preset has also_allow field (F11)" python3 -c "
+import yaml
+m = yaml.safe_load(open('$MANIFEST'))
+assert 'also_allow' in m['presets']['soft'], 'soft preset missing also_allow'
+assert isinstance(m['presets']['soft']['also_allow'], list)
+"
+echo ""
+
 # --- NEVER-enable enforcement ---
 echo "  NEVER-enable enforcement:"
 check_fail "gateway cannot be enabled" \

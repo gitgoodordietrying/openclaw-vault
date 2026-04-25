@@ -216,12 +216,31 @@ def compute_risk_score(manifest, enabled_tools):
     return min(round(score, 3), 0.9)
 
 
+def build_also_allow(manifest, preset_name, enabled_tools):
+    """Build the alsoAllow list from a preset's also_allow field.
+
+    F11: Some OpenClaw tools (web_fetch, web_search, cron, canvas, message)
+    have empty profiles in OpenClaw's tool catalog, so they're never
+    auto-allowed by any profile. The preset's also_allow field names them
+    explicitly. We intersect with enabled_tools as defense-in-depth: if a
+    tool was disabled via --disable, it must not survive in alsoAllow.
+    NEVER-enable tools are filtered out as a final safety check.
+    """
+    if not preset_name or preset_name not in manifest["presets"]:
+        return []
+    preset_also = manifest["presets"][preset_name].get("also_allow", []) or []
+    never_enable = set(manifest["never_enable"])
+    result = sorted(t for t in preset_also if t in enabled_tools and t not in never_enable)
+    return result
+
+
 def generate_config(manifest, enabled_tools, preset_name=None):
     """Generate the complete openclaw.json config."""
     invariants = manifest["invariants"]
     profile = determine_profile(manifest, enabled_tools)
     deny_list = build_deny_list(manifest, enabled_tools)
     safebins, safebin_profiles = build_safebins(manifest, preset_name, enabled_tools)
+    also_allow = build_also_allow(manifest, preset_name, enabled_tools)
     exec_enabled = "exec" in enabled_tools
 
     # Get exec settings from preset or defaults
@@ -293,6 +312,10 @@ def generate_config(manifest, enabled_tools, preset_name=None):
     if safebins:
         config["tools"]["exec"]["safeBins"] = safebins
         config["tools"]["exec"]["safeBinProfiles"] = safebin_profiles
+
+    # Emit alsoAllow only when the preset declared one (F11).
+    if also_allow:
+        config["tools"]["alsoAllow"] = also_allow
 
     return config
 
