@@ -103,8 +103,14 @@ echo ""
 
 # --- Wait for proxy to be ready ---
 echo "[*] Waiting for proxy to initialize..."
+# Resolve the proxy container by compose service label so this works
+# regardless of project name or `container_name:` overrides.
+# See docs/specs/2026-05-10-script-container-resolution.md
+PROXY_CONTAINER=$($RUNTIME ps -a \
+    --filter "label=com.docker.compose.service=vault-proxy" \
+    --format '{{.Names}}' 2>/dev/null | head -n 1)
 for i in $(seq 1 15); do
-    if $RUNTIME exec vault-proxy sh -c 'echo OK' &>/dev/null; then
+    if [ -n "$PROXY_CONTAINER" ] && $RUNTIME exec "$PROXY_CONTAINER" sh -c 'echo OK' &>/dev/null; then
         echo "[+] Proxy is ready."
         break
     fi

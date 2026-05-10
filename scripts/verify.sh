@@ -16,7 +16,25 @@ set -uo pipefail
 RUNTIME="podman"
 command -v podman &>/dev/null || RUNTIME="docker"
 
-CONTAINER="openclaw-vault"
+# Resolve a compose service name to the actual container name via the
+# `com.docker.compose.service` label. Works regardless of project name or
+# `container_name:` overrides — see docs/specs/2026-05-10-script-container-resolution.md
+resolve_service_container() {
+    local service container
+    for service in "$@"; do
+        container=$($RUNTIME ps -a \
+            --filter "label=com.docker.compose.service=$service" \
+            --format '{{.Names}}' 2>/dev/null | head -n 1)
+        if [ -n "$container" ]; then
+            echo "$container"
+            return 0
+        fi
+    done
+    return 1
+}
+
+CONTAINER=$(resolve_service_container vault) || CONTAINER=""
+PROXY_CONTAINER=$(resolve_service_container vault-proxy) || PROXY_CONTAINER=""
 PASS=0
 FAIL=0
 SKIP=0
@@ -57,8 +75,8 @@ echo "====================================="
 echo ""
 
 # Check container is running
-if ! $RUNTIME inspect "$CONTAINER" &>/dev/null; then
-    echo "[!] Container '$CONTAINER' is not running."
+if [ -z "$CONTAINER" ] || ! $RUNTIME inspect "$CONTAINER" &>/dev/null; then
+    echo "[!] Vault container (compose service 'vault') is not running."
     echo "    Start it first: $RUNTIME compose up -d"
     exit 1
 fi
@@ -305,8 +323,8 @@ print('ok')
     # Check 22: Proxy allowlist contains only expected domains
     printf "  [%2d] %-50s " 22 "Proxy allowlist — no unexpected domains"
     proxy_allowlist=""
-    if $RUNTIME inspect "vault-proxy" --format '{{.State.Status}}' 2>/dev/null | grep -q "running"; then
-        proxy_allowlist=$($RUNTIME exec vault-proxy sh -c "cat /opt/vault/allowlist.txt 2>/dev/null" 2>&1) || proxy_allowlist=""
+    if [ -n "$PROXY_CONTAINER" ] && $RUNTIME inspect "$PROXY_CONTAINER" --format '{{.State.Status}}' 2>/dev/null | grep -q "running"; then
+        proxy_allowlist=$($RUNTIME exec "$PROXY_CONTAINER" sh -c "cat /opt/vault/allowlist.txt 2>/dev/null" 2>&1) || proxy_allowlist=""
     fi
     if [ -n "$proxy_allowlist" ]; then
         result=$(echo "$proxy_allowlist" | python3 -c "

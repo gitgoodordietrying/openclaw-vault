@@ -26,8 +26,25 @@ VAULT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 RUNTIME="podman"
 command -v podman &>/dev/null || RUNTIME="docker"
 
-PROXY_CONTAINER="vault-proxy"
-VAULT_CONTAINER="openclaw-vault"
+# Resolve a compose service name to the actual container name via the
+# `com.docker.compose.service` label. Works regardless of project name or
+# `container_name:` overrides — see docs/specs/2026-05-10-script-container-resolution.md
+resolve_service_container() {
+    local service container
+    for service in "$@"; do
+        container=$($RUNTIME ps -a \
+            --filter "label=com.docker.compose.service=$service" \
+            --format '{{.Names}}' 2>/dev/null | head -n 1)
+        if [ -n "$container" ]; then
+            echo "$container"
+            return 0
+        fi
+    done
+    return 1
+}
+
+PROXY_CONTAINER=$(resolve_service_container vault-proxy) || PROXY_CONTAINER=""
+VAULT_CONTAINER=$(resolve_service_container vault) || VAULT_CONTAINER=""
 PROXY_LOG_PATH="/var/log/vault-proxy/requests.jsonl"
 MAX_LOG_BYTES=$((10 * 1024 * 1024))  # 10MB
 MAX_ROTATIONS=5

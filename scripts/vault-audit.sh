@@ -23,8 +23,25 @@ VAULT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 RUNTIME="podman"
 command -v podman &>/dev/null || RUNTIME="docker"
 
-CONTAINER="openclaw-vault"
-PROXY_CONTAINER="vault-proxy"
+# Resolve a compose service name to the actual container name via the
+# `com.docker.compose.service` label. Works regardless of project name or
+# `container_name:` overrides — see docs/specs/2026-05-10-script-container-resolution.md
+resolve_service_container() {
+    local service container
+    for service in "$@"; do
+        container=$($RUNTIME ps -a \
+            --filter "label=com.docker.compose.service=$service" \
+            --format '{{.Names}}' 2>/dev/null | head -n 1)
+        if [ -n "$container" ]; then
+            echo "$container"
+            return 0
+        fi
+    done
+    return 1
+}
+
+CONTAINER=$(resolve_service_container vault) || CONTAINER=""
+PROXY_CONTAINER=$(resolve_service_container vault-proxy) || PROXY_CONTAINER=""
 AUDIT_STATE_FILE="$VAULT_DIR/.vault-audit-timestamp"
 
 # Colors
@@ -630,8 +647,8 @@ print_banner() {
     echo -e "${BOLD}OpenClaw-Vault Workspace Audit${NC}"
     echo "=============================="
     echo ""
-    echo "  Container:  $CONTAINER ($(is_container_running $CONTAINER && echo 'running' || echo 'stopped'))"
-    echo "  Proxy:      $PROXY_CONTAINER ($(is_container_running $PROXY_CONTAINER && echo 'running' || echo 'stopped'))"
+    echo "  Container:  ${CONTAINER:-vault} ($([ -n "$CONTAINER" ] && is_container_running "$CONTAINER" && echo 'running' || echo 'not found'))"
+    echo "  Proxy:      ${PROXY_CONTAINER:-vault-proxy} ($([ -n "$PROXY_CONTAINER" ] && is_container_running "$PROXY_CONTAINER" && echo 'running' || echo 'not found'))"
     echo "  Audit time: $(date '+%Y-%m-%d %H:%M:%S')"
 }
 
