@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# OpenClaw-Vault: Skill Installation — Forge-Vetted Skills into Vault Workspace
+# OpenCli-Container: Skill Installation — Forge-Vetted Skills into Vault Workspace
 #
 # Copies a skill SKILL.md into the vault agent's workspace after validation.
 # Skills are reference material (markdown) — they instruct the agent but do not
@@ -22,7 +22,7 @@ set -uo pipefail
 VAULT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 RUNTIME="podman"
 command -v podman &>/dev/null || RUNTIME="docker"
-CONTAINER="openclaw-vault"
+CONTAINER="opencli-container"
 WORKSPACE_SKILLS="/home/vault/.openclaw/workspace/skills"
 
 BOLD='\033[1m'
@@ -111,7 +111,7 @@ install_skill() {
     local clearance_file="${2:-}"
 
     echo ""
-    echo -e "${BOLD}OpenClaw-Vault: Install Skill${NC}"
+    echo -e "${BOLD}OpenCli-Container: Install Skill${NC}"
     echo "============================="
     echo ""
 
@@ -207,12 +207,12 @@ else:
     else
         echo ""
         echo -e "${RED}  ERROR: Clearance report required.${NC}"
-        echo "  Skills must be vetted by clawhub-forge before installation."
+        echo "  Skills must be vetted by openskill-forge before installation."
         echo "  Option A (recommended): use the forge export directory, which bundles the report:"
-        echo "    cd components/clawhub-forge && make export SKILL=$skill_name"
-        echo "    bash scripts/install-skill.sh ../clawhub-forge/exports/$skill_name/"
+        echo "    cd components/openskill-forge && make export SKILL=$skill_name"
+        echo "    bash scripts/install-skill.sh ../openskill-forge/exports/$skill_name/"
         echo "  Option B: run certification and pass the report explicitly:"
-        echo "    cd components/clawhub-forge && make certify SKILL=$skill_name"
+        echo "    cd components/openskill-forge && make certify SKILL=$skill_name"
         echo "    bash scripts/install-skill.sh $skill_dir --clearance <path-to-clearance-report.json>"
         exit 1
     fi
@@ -271,7 +271,7 @@ case "${1:-}" in
         remove_skill "$2"
         ;;
     --help|-h)
-        echo "OpenClaw-Vault: Skill Installation"
+        echo "OpenCli-Container: Skill Installation"
         echo ""
         echo "Usage:"
         echo "  $0 <skill-dir> --clearance <report.json>  Install a skill (clearance required)"
@@ -279,8 +279,8 @@ case "${1:-}" in
         echo "  $0 --list                                 List installed skills"
         echo "  $0 --remove <name>                        Remove an installed skill"
         echo ""
-        echo "Skills must be vetted by clawhub-forge before installation."
-        echo "Run: cd components/clawhub-forge && make scan-one SKILL=<name>"
+        echo "Skills must be vetted by openskill-forge before installation."
+        echo "Run: cd components/openskill-forge && make scan-one SKILL=<name>"
         exit 0
         ;;
     "")

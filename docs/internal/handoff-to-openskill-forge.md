@@ -1,17 +1,17 @@
-# Handoff Document: openclaw-vault → clawhub-forge
+# Handoff Document: opencli-container → openskill-forge
 
 **Date:** 2026-04-01
-**From:** openclaw-vault (certified, all 8 phases complete)
-**To:** clawhub-forge (next module to polish)
+**From:** opencli-container (certified, all 8 phases complete)
+**To:** openskill-forge (next module to polish)
 
-> **NOTE (2026-04-02):** The authoritative design document for clawhub-forge is now
-> `clawhub-forge/docs/forge-identity-and-design.md`. It defines the forge's identity
+> **NOTE (2026-04-02):** The authoritative design document for openskill-forge is now
+> `openskill-forge/docs/forge-identity-and-design.md`. It defines the forge's identity
 > (Shield/Anvil/Stamp), the CDR innovation, the 5-phase roadmap, and all resolved
 > design decisions. The roadmap below is superseded by that document's Phase 2-3.
 
 ---
 
-## What Was Done in openclaw-vault
+## What Was Done in opencli-container
 
 ### Summary
 Built a complete zero-trust security harness for the OpenClaw AI agent with three shell levels (Hard/Split/Soft), per-tool whitelisting/blacklisting, 24-point security verification, and comprehensive monitoring. The module is certified and shippable.
@@ -35,9 +35,9 @@ Built a complete zero-trust security harness for the OpenClaw AI agent with thre
 
 ---
 
-## What clawhub-forge Needs to Do
+## What openskill-forge Needs to Do
 
-### Per the Forge Roadmap (`components/clawhub-forge/docs/roadmap.md`)
+### Per the Forge Roadmap (`components/openskill-forge/docs/roadmap.md`)
 
 **Phase 1: Housekeeping**
 - Remove duplicate `docs/security-report.md` (keep `docs/research/` version)
@@ -57,7 +57,7 @@ Built a complete zero-trust security harness for the OpenClaw AI agent with thre
 
 **Phase 4: Scanner Improvements**
 - Verify scanner against real ClawHub skills
-- Pattern sharing investigation with moltbook-pioneer
+- Pattern sharing investigation with openagent-social
 
 **Phase 5: CI/CD Pipeline**
 - Uncomment and configure auto-publish CI
@@ -91,7 +91,7 @@ The vault's `install-skill.sh` validates this JSON structure:
 
 ---
 
-## What NOT to Do in clawhub-forge
+## What NOT to Do in openskill-forge
 
 - Do not add runtime isolation logic (that's vault's job)
 - Do not add network proxying or container orchestration (vault's job)
@@ -104,13 +104,13 @@ The vault's `install-skill.sh` validates this JSON structure:
 
 | Document | Location | What It Contains |
 |---|---|---|
-| Trifecta overview | `lobster-trapp/docs/trifecta.md` | How all three modules work together |
-| Vault roadmap | `openclaw-vault/docs/roadmap.md` | All 8 phases (complete) |
-| Forge roadmap | `clawhub-forge/docs/roadmap.md` | 5 phases (created 2026-03-27) |
-| Pioneer roadmap | `moltbook-pioneer/docs/roadmap.md` | 5 phases (created 2026-03-27) |
-| Skill installation spec | `openclaw-vault/docs/specs/2026-03-30-skill-installation-path.md` | Clearance report format |
-| Tool manifest | `openclaw-vault/config/tool-manifest.yml` | All 26 tools with injection vectors |
-| GLOSSARY | `lobster-trapp/GLOSSARY.md` | Official terminology (shell levels, architecture, security terms) |
+| Trifecta overview | `opentrapp/docs/trifecta.md` | How all three modules work together |
+| Vault roadmap | `opencli-container/docs/roadmap.md` | All 8 phases (complete) |
+| Forge roadmap | `openskill-forge/docs/roadmap.md` | 5 phases (created 2026-03-27) |
+| Pioneer roadmap | `openagent-social/docs/roadmap.md` | 5 phases (created 2026-03-27) |
+| Skill installation spec | `opencli-container/docs/specs/2026-03-30-skill-installation-path.md` | Clearance report format |
+| Tool manifest | `opencli-container/config/tool-manifest.yml` | All 26 tools with injection vectors |
+| GLOSSARY | `opentrapp/GLOSSARY.md` | Official terminology (shell levels, architecture, security terms) |
 
 ---
 
@@ -131,10 +131,10 @@ These were established during vault development and apply to all modules:
 
 ## Current System State
 
-- **openclaw-vault:** Soft Shell active, Hum alive on Telegram, 24/24 verify PASS
-- **clawhub-forge:** 25 published skills, 87-pattern scanner, untouched since 2026-03-27
-- **moltbook-pioneer:** 3 tools (feed scanner, census, identity checklist), untouched since 2026-03-27
-- **lobster-trapp:** GUI framework exists, submodule references updated
+- **opencli-container:** Soft Shell active, Hum alive on Telegram, 24/24 verify PASS
+- **openskill-forge:** 25 published skills, 87-pattern scanner, untouched since 2026-03-27
+- **openagent-social:** 3 tools (feed scanner, census, identity checklist), untouched since 2026-03-27
+- **opentrapp:** GUI framework exists, submodule references updated
 
 ---
 

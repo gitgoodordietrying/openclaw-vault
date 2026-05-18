@@ -1,4 +1,4 @@
-# OpenClaw-Vault: Tool Manifest — Single Source of Truth
+# OpenCli-Container: Tool Manifest — Single Source of Truth
 #
 # This file documents every tool the OpenClaw agent can use, its risk level,
 # injection vectors, and what enabling it requires across all defense layers.

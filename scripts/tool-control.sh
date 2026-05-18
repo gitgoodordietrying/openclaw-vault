@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# OpenClaw-Vault: Tool Control — Per-Tool Whitelisting/Blacklisting
+# OpenCli-Container: Tool Control — Per-Tool Whitelisting/Blacklisting
 #
 # Manages which tools the OpenClaw agent can use.
 # Shell levels (Hard/Split/Soft) are presets on a sliding zero-trust scale.
@@ -23,8 +23,8 @@ MANIFEST="$VAULT_DIR/config/tool-manifest.yml"
 RUNTIME="podman"
 command -v podman &>/dev/null || RUNTIME="docker"
 # Container name is configurable via OPENCLAW_CONTAINER for embedders
-# (e.g. lobster-trapp names this container "vault-agent" in its parent compose).
-CONTAINER="${OPENCLAW_CONTAINER:-openclaw-vault}"
+# (e.g. opentrapp names this container "vault-agent" in its parent compose).
+CONTAINER="${OPENCLAW_CONTAINER:-opencli-container}"
 # When true, --apply writes config + allowlist but does NOT touch container
 # lifecycle (no compose stop/up, no verify). Caller is responsible for
 # restarting the container. Required when invoked from a parent orchestrator
@@ -62,7 +62,7 @@ check_prerequisites() {
 # --- Status: show current tool status from running container ---
 show_status() {
     echo ""
-    echo -e "${BOLD}OpenClaw-Vault: Tool Status${NC}"
+    echo -e "${BOLD}OpenCli-Container: Tool Status${NC}"
     echo "==========================="
     echo ""
 
@@ -129,7 +129,7 @@ do_dry_run() {
     local extra_args=("$@")
 
     echo ""
-    echo -e "${BOLD}OpenClaw-Vault: Tool Control — Dry Run${NC}"
+    echo -e "${BOLD}OpenCli-Container: Tool Control — Dry Run${NC}"
     echo "======================================="
     echo ""
 
@@ -209,7 +209,7 @@ do_apply() {
     local extra_args=("$@")
 
     echo ""
-    echo -e "${BOLD}OpenClaw-Vault: Tool Control — Apply${NC}"
+    echo -e "${BOLD}OpenCli-Container: Tool Control — Apply${NC}"
     echo "====================================="
     echo ""
 
@@ -308,8 +308,8 @@ print(hashlib.sha256(critical.encode()).hexdigest())
         echo "[tool-control] Container copy failed — updating source config and rebuilding..."
         cp "$config_tmp" "$VAULT_DIR/config/openclaw-hardening.json5"
         $RUNTIME stop "$CONTAINER" vault-proxy 2>/dev/null || true
-        $RUNTIME build -t openclaw-vault -f "$VAULT_DIR/Containerfile" "$VAULT_DIR" 2>&1 | tail -3
-        $RUNTIME tag openclaw-vault openclaw-vault_vault 2>/dev/null || true
+        $RUNTIME build -t opencli-container -f "$VAULT_DIR/Containerfile" "$VAULT_DIR" 2>&1 | tail -3
+        $RUNTIME tag opencli-container opencli-container_vault 2>/dev/null || true
     }
     rm -f "$config_tmp"
 
@@ -429,7 +429,7 @@ while [ $# -gt 0 ]; do
             shift 2
             ;;
         --help|-h)
-            echo "OpenClaw-Vault: Tool Control"
+            echo "OpenCli-Container: Tool Control"
             echo ""
             echo "Usage:"
             echo "  $0 --status                              Show current tool status"
@@ -442,7 +442,7 @@ while [ $# -gt 0 ]; do
             echo "Presets: hard, split"
             echo ""
             echo "Environment:"
-            echo "  OPENCLAW_CONTAINER  Container name to target (default: openclaw-vault)"
+            echo "  OPENCLAW_CONTAINER  Container name to target (default: opencli-container)"
             echo ""
             echo "Examples:"
             echo "  $0 --preset hard --dry-run               Preview Hard Shell"

@@ -122,6 +122,6 @@ Use OpenClaw as the reference baseline: a stateful, tool-using, autonomous local
 
 ---
 
-*For competitive positioning (OpenClaw vs AutoGPT, Devin, LangGraph), see `docs/product-assessment.md` in the lobster-trapp root.*
-*For how our three modules defend against OpenClaw's threat surface, see `docs/trifecta.md` in the lobster-trapp root.*
+*For competitive positioning (OpenClaw vs AutoGPT, Devin, LangGraph), see `docs/product-assessment.md` in the opentrapp root.*
+*For how our three modules defend against OpenClaw's threat surface, see `docs/trifecta.md` in the opentrapp root.*
 *For detailed OpenClaw tool inventory and configuration, see `docs/openclaw-reference.md` in this repo.*

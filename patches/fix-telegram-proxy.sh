@@ -1,5 +1,5 @@
 #!/bin/sh
-# OpenClaw-Vault Security Patch: Fix Telegram Proxy Bypass
+# OpenCli-Container Security Patch: Fix Telegram Proxy Bypass
 #
 # Target: openclaw@2026.2.26 (dist/send-DslMV0Oj.js)
 # Issue: https://github.com/openclaw/openclaw/issues/30338

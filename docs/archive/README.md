@@ -7,9 +7,9 @@ Historical design documents preserved for chronological reference. The decisions
 | File | Subject | Status |
 |---|---|---|
 | `specs/2026-03-30-bot-token-decision.md` | Choice of Telegram bot token format and storage | Implemented |
-| `specs/2026-03-30-feed-scanning-deferred.md` | Decision to defer Moltbook feed-scanning into a separate module (now `moltbook-pioneer`) | Implemented |
+| `specs/2026-03-30-feed-scanning-deferred.md` | Decision to defer Moltbook feed-scanning into a separate module (now `openagent-social`) | Implemented |
 | `specs/2026-03-30-fix-test-scripts.md` | Audit and repair of the test-script suite (5/12 → 12/12 passing) | Implemented |
-| `specs/2026-03-30-skill-installation-path.md` | Pipeline from `clawhub-forge` certified skill to `vault-agent` workspace | Implemented |
+| `specs/2026-03-30-skill-installation-path.md` | Pipeline from `openskill-forge` certified skill to `vault-agent` workspace | Implemented |
 | `specs/2026-03-30-tool-control-system-design.md` | Per-tool whitelisting/blacklisting via YAML manifest; replaced the gear-switching script | Implemented as `scripts/tool-control.sh` and `config/tool-manifest.yml` |
 | `specs/2026-03-31-config-integrity-protection.md` | Config-file integrity hash and tamper-detection at startup | Implemented |
 | `specs/2026-03-31-soft-shell-design.md` | Soft Shell capability boundary and approval model | Implemented |

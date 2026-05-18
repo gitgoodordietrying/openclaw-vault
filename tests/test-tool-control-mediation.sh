@@ -2,12 +2,12 @@
 # Test: tool-control.sh F13 + F14 — host-side mediation fixes
 #
 # F13: Container name must be overridable via OPENCLAW_CONTAINER env var.
-#      The default ("openclaw-vault") is wrong in lobster-trapp installs,
+#      The default ("opencli-container") is wrong in opentrapp installs,
 #      where the container is named "vault-agent". A previous regression
 #      caused the apply path to write to the wrong container.
 #
 # F14: --apply must NOT invoke `compose up`. When invoked from the
-#      lobster-trapp parent repo, that creates a rogue parallel container
+#      opentrapp parent repo, that creates a rogue parallel container
 #      from the submodule's compose.yml. The parent orchestrator owns
 #      lifecycle. tool-control.sh must offer --no-restart to skip
 #      compose calls and let the caller restart.
@@ -49,14 +49,14 @@ echo "  F13 — Container name configurable via OPENCLAW_CONTAINER env:"
 check "CONTAINER var defaults via \${OPENCLAW_CONTAINER:-...}" \
     grep -qE '^CONTAINER="\$\{OPENCLAW_CONTAINER:-' "$SCRIPT"
 
-check "podman cp uses \$CONTAINER, not hardcoded openclaw-vault:" \
-    bash -c "! grep -nE 'cp [^|]*openclaw-vault:/' '$SCRIPT'"
+check "podman cp uses \$CONTAINER, not hardcoded opencli-container:" \
+    bash -c "! grep -nE 'cp [^|]*opencli-container:/' '$SCRIPT'"
 
-check "podman stop does not hardcode openclaw-vault" \
-    bash -c "! grep -nE '\\\$RUNTIME stop openclaw-vault( |$)' '$SCRIPT'"
+check "podman stop does not hardcode opencli-container" \
+    bash -c "! grep -nE '\\\$RUNTIME stop opencli-container( |$)' '$SCRIPT'"
 
-check "podman logs does not hardcode openclaw-vault" \
-    bash -c "! grep -nE '\\\$RUNTIME logs openclaw-vault( |$)' '$SCRIPT'"
+check "podman logs does not hardcode opencli-container" \
+    bash -c "! grep -nE '\\\$RUNTIME logs opencli-container( |$)' '$SCRIPT'"
 
 # --- F14 ---
 echo ""

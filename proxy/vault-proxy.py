@@ -1,5 +1,5 @@
 """
-OpenClaw-Vault: mitmproxy Addon — API Key Injection + Domain Allowlist
+OpenCli-Container: mitmproxy Addon — API Key Injection + Domain Allowlist
 
 This is the core security component. It runs as a mitmproxy addon in the
 vault-proxy sidecar container, intercepting all outbound traffic from the

@@ -1,18 +1,18 @@
 # Script Container Resolution
 
 **Status:** Draft (2026-05-10)
-**Pairs with:** parent PR-1 ([`docs/specs/v0.4-shell-tenant-reframe/07-container-name-cleanup.md`](https://github.com/albertdobmeyer/lobster-trapp/blob/main/docs/specs/v0.4-shell-tenant-reframe/07-container-name-cleanup.md) in lobster-trapp)
+**Pairs with:** parent PR-1 ([`docs/specs/v0.4-shell-tenant-reframe/07-container-name-cleanup.md`](https://github.com/albertdobmeyer/opentrapp/blob/main/docs/specs/v0.4-shell-tenant-reframe/07-container-name-cleanup.md) in opentrapp)
 
 ## Why
 
-The parent perimeter (lobster-trapp) just dropped the four `container_name:` overrides from its `compose.yml` so containers get standard project-prefixed names (`<project>_<service>_<n>`). This was a precondition for project-isolated testing in v0.4.
+The parent perimeter (opentrapp) just dropped the four `container_name:` overrides from its `compose.yml` so containers get standard project-prefixed names (`<project>_<service>_<n>`). This was a precondition for project-isolated testing in v0.4.
 
-The submodule's helper scripts (`verify.sh`, `vault-audit.sh`, `log-rotate.sh`, `setup.sh`) currently `inspect` and `exec` containers by literal name (`vault-proxy`, `openclaw-vault`). The names worked because:
+The submodule's helper scripts (`verify.sh`, `vault-audit.sh`, `log-rotate.sh`, `setup.sh`) currently `inspect` and `exec` containers by literal name (`vault-proxy`, `opencli-container`). The names worked because:
 
-- In standalone use, the submodule's own `compose.yml` declares `container_name: openclaw-vault` and `container_name: vault-proxy` — literal match.
+- In standalone use, the submodule's own `compose.yml` declares `container_name: opencli-container` and `container_name: vault-proxy` — literal match.
 - In parent use, the parent's `compose.yml` *also* used to declare `container_name: vault-proxy` — literal match for the proxy by coincidence. After parent PR-1 that override is gone.
 
-The agent-side name match (`openclaw-vault`) was *only* ever true in standalone use — the parent's agent service has always been called `vault-agent`, so `verify.sh` against the parent has always exited 1 at its "container not running" gate.
+The agent-side name match (`opencli-container`) was *only* ever true in standalone use — the parent's agent service has always been called `vault-agent`, so `verify.sh` against the parent has always exited 1 at its "container not running" gate.
 
 ## Scope of this PR
 
@@ -28,7 +28,7 @@ The agent service name differs between contexts:
 | Context | Service name |
 |---------|--------------|
 | Standalone (this submodule's `compose.yml`) | `vault` |
-| Parent (lobster-trapp's `compose.yml`) | `vault-agent` |
+| Parent (opentrapp's `compose.yml`) | `vault-agent` |
 
 So `verify.sh`'s 24 agent-side checks continue to be standalone-only. The parent's `verify` command in `component.yml` (line 135) was always exiting 1 immediately. Fixing this requires either:
 

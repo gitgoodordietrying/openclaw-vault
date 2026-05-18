@@ -1,4 +1,4 @@
-# OpenClaw-Vault: Kill Switch (Windows PowerShell)
+# OpenCli-Container: Kill Switch (Windows PowerShell)
 # Usage: .\scripts\kill.ps1 -Mode soft|hard|nuclear
 
 param(
@@ -22,14 +22,14 @@ function Invoke-HardKill {
 
     # Docker sandbox cleanup
     if ($Runtime -eq "docker") {
-        & docker sandbox rm openclaw-vault 2>$null
+        & docker sandbox rm opencli-container 2>$null
     }
 
-    & $Runtime rmi openclaw-vault 2>$null
+    & $Runtime rmi opencli-container 2>$null
 
     # Remove vault-specific resources only (not global prune)
-    & $Runtime volume rm openclaw-vault_vault-proxy-logs 2>$null
-    & $Runtime volume rm openclaw-vault_proxy-ca 2>$null
+    & $Runtime volume rm opencli-container_vault-proxy-logs 2>$null
+    & $Runtime volume rm opencli-container_proxy-ca 2>$null
 
     Write-Host "[+] All vault containers, volumes, networks, and images removed." -ForegroundColor Green
 }
@@ -41,7 +41,7 @@ switch ($Mode) {
         & $Runtime compose stop
         Pop-Location
         Write-Host "[+] Containers stopped. Workspace preserved for forensic review." -ForegroundColor Green
-        Write-Host "    Inspect: $Runtime logs openclaw-vault"
+        Write-Host "    Inspect: $Runtime logs opencli-container"
         Write-Host "    Inspect: $Runtime logs vault-proxy"
     }
 
@@ -53,15 +53,15 @@ switch ($Mode) {
         Write-Host "[NUCLEAR KILL] Destroying isolation boundary..." -ForegroundColor Magenta
 
         # Terminate WSL distro
-        Write-Host "  Terminating WSL distro 'openclaw-vault'..."
-        wsl --terminate openclaw-vault 2>$null
-        Write-Host "  To fully unregister: wsl --unregister openclaw-vault"
+        Write-Host "  Terminating WSL distro 'opencli-container'..."
+        wsl --terminate opencli-container 2>$null
+        Write-Host "  To fully unregister: wsl --unregister opencli-container"
 
         # Stop Hyper-V VM
-        Write-Host "  Stopping Hyper-V VM 'openclaw-vault'..."
+        Write-Host "  Stopping Hyper-V VM 'opencli-container'..."
         try {
-            Stop-VM -Name "openclaw-vault" -TurnOff -Force -ErrorAction SilentlyContinue
-            Write-Host "  To fully remove: Remove-VM -Name 'openclaw-vault' -Force"
+            Stop-VM -Name "opencli-container" -TurnOff -Force -ErrorAction SilentlyContinue
+            Write-Host "  To fully remove: Remove-VM -Name 'opencli-container' -Force"
         }
         catch {
             Write-Host "  No Hyper-V VM found (expected if Phase 2 not deployed)."

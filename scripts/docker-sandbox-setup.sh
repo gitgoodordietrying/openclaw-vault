@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# OpenClaw-Vault: Path B — Docker Desktop Sandbox Plugin Setup
+# OpenCli-Container: Path B — Docker Desktop Sandbox Plugin Setup
 #
 # Uses Docker Desktop's built-in sandbox feature (4.49+).
 # Simpler than Path A but the API key IS passed as an env var
@@ -11,10 +11,10 @@ set -euo pipefail
 
 VAULT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_FILE="$VAULT_DIR/.env"
-SANDBOX_NAME="openclaw-vault"
+SANDBOX_NAME="opencli-container"
 
 echo "╔══════════════════════════════════════════════════════╗"
-echo "║    OpenClaw-Vault — Docker Sandbox Plugin Path       ║"
+echo "║    OpenCli-Container — Docker Sandbox Plugin Path       ║"
 echo "║    (Path B: simpler but weaker key isolation)        ║"
 echo "╚══════════════════════════════════════════════════════╝"
 echo ""
@@ -53,8 +53,8 @@ if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
 fi
 
 # --- Build image ---
-echo "[*] Building openclaw-vault image..."
-docker build -t openclaw-vault -f "$VAULT_DIR/Containerfile" "$VAULT_DIR"
+echo "[*] Building opencli-container image..."
+docker build -t opencli-container -f "$VAULT_DIR/Containerfile" "$VAULT_DIR"
 
 # --- Remove existing sandbox if present ---
 if docker sandbox ls 2>/dev/null | grep -q "$SANDBOX_NAME"; then
@@ -65,7 +65,7 @@ fi
 # --- Create sandbox ---
 echo "[*] Creating Docker sandbox..."
 docker sandbox create "$SANDBOX_NAME" \
-    --image openclaw-vault:latest
+    --image opencli-container:latest
 
 # --- Network policy: deny all, then allowlist ---
 echo "[*] Configuring network proxy (deny-by-default)..."

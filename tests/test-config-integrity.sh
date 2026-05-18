@@ -8,7 +8,7 @@ set -euo pipefail
 
 RUNTIME="${RUNTIME:-podman}"
 command -v "$RUNTIME" &>/dev/null || RUNTIME="docker"
-CONTAINER="openclaw-vault"
+CONTAINER="opencli-container"
 CONFIG="/home/vault/.openclaw/openclaw.json"
 
 echo "=== Config Integrity Tests ==="

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# OpenClaw-Vault: One-command setup (Linux/macOS)
+# OpenCli-Container: One-command setup (Linux/macOS)
 # Usage: bash scripts/setup.sh
 
 set -euo pipefail
@@ -8,7 +8,7 @@ VAULT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_FILE="$VAULT_DIR/.env"
 
 echo "╔══════════════════════════════════════════════════════╗"
-echo "║         OpenClaw-Vault — Secure Containment          ║"
+echo "║         OpenCli-Container — Secure Containment          ║"
 echo "║    Defense-in-depth sandbox for OpenClaw research    ║"
 echo "╚══════════════════════════════════════════════════════╝"
 echo ""
@@ -70,7 +70,7 @@ else
     echo ""
 
     {
-        echo "# OpenClaw-Vault API keys — NEVER committed to git"
+        echo "# OpenCli-Container API keys — NEVER committed to git"
         echo "# These are injected by the mitmproxy sidecar, not the OpenClaw container."
         echo "#"
         echo "# Best practices:"
@@ -86,8 +86,8 @@ fi
 
 # --- Build the image ---
 echo ""
-echo "[*] Building openclaw-vault container image..."
-$RUNTIME build -t openclaw-vault -f "$VAULT_DIR/Containerfile" "$VAULT_DIR"
+echo "[*] Building opencli-container container image..."
+$RUNTIME build -t opencli-container -f "$VAULT_DIR/Containerfile" "$VAULT_DIR"
 
 # --- Start the stack ---
 echo ""
@@ -97,7 +97,7 @@ $COMPOSE up -d --no-build
 
 echo ""
 echo "[+] Vault stack is running."
-echo "    Container: openclaw-vault"
+echo "    Container: opencli-container"
 echo "    Proxy:     vault-proxy (mitmproxy on internal network)"
 echo ""
 
@@ -128,7 +128,7 @@ echo ""
 echo "╔══════════════════════════════════════════════════════╗"
 echo "║                    VAULT IS READY                    ║"
 echo "╠══════════════════════════════════════════════════════╣"
-echo "║  Attach: $RUNTIME exec -it openclaw-vault sh        ║"
+echo "║  Attach: $RUNTIME exec -it opencli-container sh        ║"
 echo "║  Logs:   $COMPOSE logs -f                           ║"
 echo "║  Stop:   bash scripts/kill.sh --soft                 ║"
 echo "║  Nuke:   bash scripts/kill.sh --hard                ║"

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# OpenClaw-Vault: Kill Switch
+# OpenCli-Container: Kill Switch
 #
 # Three escalation levels:
 #   --soft    Graceful stop (preserves workspace for forensics)
@@ -35,15 +35,15 @@ do_hard_kill() {
 
     # Also clean up Docker sandbox if it exists
     if command -v docker &>/dev/null; then
-        docker sandbox rm openclaw-vault 2>/dev/null || true
+        docker sandbox rm opencli-container 2>/dev/null || true
     fi
 
     # Remove the image
-    $RUNTIME rmi openclaw-vault 2>/dev/null || true
+    $RUNTIME rmi opencli-container 2>/dev/null || true
 
     # Remove vault-specific resources only (not global prune)
-    $RUNTIME volume rm openclaw-vault_vault-proxy-logs 2>/dev/null || true
-    $RUNTIME volume rm openclaw-vault_proxy-ca 2>/dev/null || true
+    $RUNTIME volume rm opencli-container_vault-proxy-logs 2>/dev/null || true
+    $RUNTIME volume rm opencli-container_proxy-ca 2>/dev/null || true
 
     echo "[+] All vault containers, volumes, networks, and images removed."
 }
@@ -56,7 +56,7 @@ case "$1" in
         cd "$VAULT_DIR"
         $COMPOSE stop
         echo "[+] Containers stopped. Workspace preserved for forensic review."
-        echo "    Inspect: $RUNTIME logs openclaw-vault"
+        echo "    Inspect: $RUNTIME logs opencli-container"
         echo "    Inspect: $RUNTIME logs vault-proxy"
         echo "    Proxy logs: $RUNTIME exec vault-proxy cat /var/log/vault-proxy/requests.jsonl"
         ;;
@@ -73,16 +73,16 @@ case "$1" in
 
         # Phase 2: WSL distro
         if command -v wsl.exe &>/dev/null; then
-            echo "  Terminating WSL distro 'openclaw-vault'..."
-            wsl.exe --terminate openclaw-vault 2>/dev/null || true
-            echo "  To fully unregister: wsl.exe --unregister openclaw-vault"
+            echo "  Terminating WSL distro 'opencli-container'..."
+            wsl.exe --terminate opencli-container 2>/dev/null || true
+            echo "  To fully unregister: wsl.exe --unregister opencli-container"
         fi
 
         # Phase 2: Hyper-V VM
         if command -v powershell.exe &>/dev/null; then
-            echo "  Stopping Hyper-V VM 'openclaw-vault'..."
-            powershell.exe -Command "Stop-VM -Name 'openclaw-vault' -TurnOff -Force" 2>/dev/null || true
-            echo "  To fully remove: powershell.exe -Command \"Remove-VM -Name 'openclaw-vault' -Force\""
+            echo "  Stopping Hyper-V VM 'opencli-container'..."
+            powershell.exe -Command "Stop-VM -Name 'opencli-container' -TurnOff -Force" 2>/dev/null || true
+            echo "  To fully remove: powershell.exe -Command \"Remove-VM -Name 'opencli-container' -Force\""
         fi
 
         # Also do a hard kill of containers

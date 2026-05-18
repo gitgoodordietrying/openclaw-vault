@@ -48,7 +48,7 @@ In Split Shell, every exec command requires Telegram approval. A user who sees `
 ### Step 1: Test if OpenClaw tolerates read-only config
 
 ```bash
-podman exec openclaw-vault sh -c "chmod 444 /home/vault/.openclaw/openclaw.json"
+podman exec opencli-container sh -c "chmod 444 /home/vault/.openclaw/openclaw.json"
 # Restart and check if OpenClaw starts
 ```
 

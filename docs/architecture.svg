@@ -22,7 +22,7 @@
   <rect width="900" height="620" rx="8" fill="#0d1117"/>
 
   <!-- Title -->
-  <text x="450" y="36" text-anchor="middle" fill="#e6edf3" font-size="18" font-weight="600">OpenClaw-Vault Architecture</text>
+  <text x="450" y="36" text-anchor="middle" fill="#e6edf3" font-size="18" font-weight="600">OpenCli-Container Architecture</text>
 
   <!-- Host boundary -->
   <rect x="30" y="52" width="840" height="540" rx="12" fill="url(#hostGrad)" stroke="#30363d" stroke-width="1.5"/>
@@ -39,7 +39,7 @@
 
   <!-- ═══════════ Vault Container ═══════════ -->
   <rect x="68" y="130" width="440" height="284" rx="10" fill="url(#vaultGrad)" stroke="#1f6feb" stroke-width="1.5"/>
-  <text x="88" y="158" fill="#58a6ff" font-size="15" font-weight="600">Hardened Container (openclaw-vault)</text>
+  <text x="88" y="158" fill="#58a6ff" font-size="15" font-weight="600">Hardened Container (opencli-container)</text>
 
   <!-- OpenClaw runtime -->
   <rect x="88" y="172" width="400" height="48" rx="6" fill="#0d1117" stroke="#30363d" stroke-width="1"/>

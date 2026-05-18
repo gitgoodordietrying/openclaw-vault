@@ -1,4 +1,4 @@
-// OpenClaw-Vault: Global Proxy Bootstrap
+// OpenCli-Container: Global Proxy Bootstrap
 // Forces all undici/fetch requests through the vault proxy BEFORE OpenClaw starts.
 // This fixes grammY (Telegram) not respecting HTTP_PROXY env vars.
 

@@ -1,5 +1,5 @@
 #!/bin/sh
-# OpenClaw-Vault entrypoint wrapper
+# OpenCli-Container entrypoint wrapper
 #
 # Handles both volatile (tmpfs/Hard Shell) and persistent (volume/Split Shell) modes.
 # 1. Install or preserve OpenClaw config

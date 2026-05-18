@@ -1,8 +1,8 @@
-# OpenClaw-Vault: Phase 2 — Tear down WSL2 distro
+# OpenCli-Container: Phase 2 — Tear down WSL2 distro
 # STATUS: Placeholder — not yet implemented
 #
 # Will:
-#   1. Terminate the 'openclaw-vault' WSL distro
+#   1. Terminate the 'opencli-container' WSL distro
 #   2. Optionally export workspace for forensics
 #   3. Unregister the distro
 

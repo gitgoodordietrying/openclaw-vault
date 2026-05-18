@@ -1,4 +1,4 @@
-// OpenClaw-Vault: Split Shell Configuration
+// OpenCli-Container: Split Shell Configuration
 //
 // Split Shell enables the agent to do useful work through controlled exec access
 // with a strict safeBins allowlist and human approval for every command.

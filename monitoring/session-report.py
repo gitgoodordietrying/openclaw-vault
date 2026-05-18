@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenClaw-Vault: Session Report Generator — Post-Session Summary
+OpenCli-Container: Session Report Generator — Post-Session Summary
 
 Parses session transcript .jsonl files and produces a human-readable
 summary of what happened during an agent session. This answers:
@@ -88,7 +88,7 @@ def find_transcript_source():
 
     try:
         result = subprocess.run(
-            [runtime, "exec", "openclaw-vault", "sh", "-c",
+            [runtime, "exec", "opencli-container", "sh", "-c",
              "cat /home/vault/.openclaw/agents/main/sessions/*.jsonl 2>/dev/null"],
             capture_output=True,
             text=True,
@@ -306,7 +306,7 @@ def format_report(report):
     cyan = "\033[0;36m"
 
     print()
-    print(f"{bold}OpenClaw-Vault: Session Report{nc}")
+    print(f"{bold}OpenCli-Container: Session Report{nc}")
     print("=" * 40)
 
     # --- Duration ---
@@ -406,7 +406,7 @@ def main():
         raw = find_transcript_source()
         if raw is None:
             print("Error: no session transcripts found.", file=sys.stderr)
-            print("  Is the openclaw-vault container running?", file=sys.stderr)
+            print("  Is the opencli-container container running?", file=sys.stderr)
             print("  Try: python3 monitoring/session-report.py --file <path-to-session.jsonl>", file=sys.stderr)
             sys.exit(1)
 

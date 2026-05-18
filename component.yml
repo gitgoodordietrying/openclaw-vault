@@ -1,14 +1,14 @@
 # yaml-language-server: $schema=../../schemas/component.schema.json
 
 identity:
-  id: openclaw-vault
-  name: OpenClaw Vault
+  id: opencli-container
+  name: OpenCli Container
   version: "0.1.0"
   description: Hardened container for the OpenClaw agent runtime
   role: runtime
   icon: shield
   color: "#dc2626"
-  repo: https://github.com/albertdobmeyer/openclaw-vault
+  repo: https://github.com/albertdobmeyer/opencli-container
 
 status:
   states:
@@ -30,7 +30,7 @@ status:
       color: "#a855f7"
 
   probes:
-    - command: podman inspect --format '{{.State.Status}}' openclaw-vault 2>/dev/null
+    - command: podman inspect --format '{{.State.Status}}' opencli-container 2>/dev/null
       interval_seconds: 10
       timeout_seconds: 5
       rules:
@@ -40,7 +40,7 @@ status:
           state: stopped
         - exit_code: 0
           state: stopped
-    - command: podman image exists openclaw-vault 2>/dev/null && echo exists
+    - command: podman image exists opencli-container 2>/dev/null && echo exists
       interval_seconds: 30
       timeout_seconds: 5
       rules:
@@ -166,7 +166,7 @@ commands:
     group: operations
     type: action
     danger: caution
-    command: podman exec openclaw-vault openclaw pairing approve telegram ${pairing_code}
+    command: podman exec opencli-container openclaw pairing approve telegram ${pairing_code}
     args:
       - id: pairing_code
         name: Pairing code
@@ -187,7 +187,7 @@ commands:
     group: monitoring
     type: stream
     danger: safe
-    command: podman logs -f openclaw-vault
+    command: podman logs -f opencli-container
     output:
       format: ansi
       display: terminal
@@ -313,12 +313,12 @@ prerequisites:
     - path: .env
       template: .env.example
       description: API keys and runtime configuration
-  check_command: podman image exists openclaw-vault 2>/dev/null || docker image inspect openclaw-vault >/dev/null 2>&1
+  check_command: podman image exists opencli-container 2>/dev/null || docker image inspect opencli-container >/dev/null 2>&1
 
 health:
   - id: container-status
     name: Container
-    command: podman inspect --format '{{.State.Status}}' openclaw-vault 2>/dev/null || echo offline
+    command: podman inspect --format '{{.State.Status}}' opencli-container 2>/dev/null || echo offline
     interval_seconds: 10
     timeout_seconds: 5
     parse:

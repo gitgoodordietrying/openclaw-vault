@@ -338,7 +338,7 @@ The vault air-gaps the OpenClaw agent from the user's computer. The division:
 
 **Agent side (constructive only):** read, write, create, search, analyze. The agent can build and propose, but never destroy.
 
-**User side (destructive + admin):** delete, modify system, change permissions, manage tool access, review audits. Claude Code and the Lobster-TrApp GUI handle these from outside the container.
+**User side (destructive + admin):** delete, modify system, change permissions, manage tool access, review audits. Claude Code and the OpenTrApp GUI handle these from outside the container.
 
 If Hum needs something deleted, it asks the user via Telegram. The user or Claude handles it from the host.
 

@@ -1,4 +1,4 @@
-# OpenClaw-Vault: Compose Orchestration (Path A — Podman/Docker + mitmproxy)
+# OpenCli-Container: Compose Orchestration (Path A — Podman/Docker + mitmproxy)
 #
 # Usage:
 #   podman compose up -d      (or: docker compose up -d)
@@ -13,7 +13,7 @@ services:
     build:
       context: .
       dockerfile: Containerfile
-    container_name: openclaw-vault
+    container_name: opencli-container
     read_only: true
     tmpfs:
       # /tmp stays volatile — scratch space only

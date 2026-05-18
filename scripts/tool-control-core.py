@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenClaw-Vault: Tool Control Core — Config Generator
+OpenCli-Container: Tool Control Core — Config Generator
 
 Reads the tool manifest and a user selection, then generates the correct
 openclaw.json config and proxy allowlist. This is the security-critical

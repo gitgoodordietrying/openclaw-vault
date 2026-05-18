@@ -1,4 +1,4 @@
-# OpenClaw-Vault: One-command setup (Windows PowerShell)
+# OpenCli-Container: One-command setup (Windows PowerShell)
 # Usage: .\scripts\setup.ps1
 
 $ErrorActionPreference = "Stop"
@@ -7,7 +7,7 @@ $EnvFile = Join-Path $VaultDir ".env"
 
 Write-Host @"
 +======================================================+
-|         OpenClaw-Vault - Secure Containment           |
+|         OpenCli-Container - Secure Containment           |
 |    Defense-in-depth sandbox for OpenClaw research     |
 +======================================================+
 "@
@@ -87,7 +87,7 @@ else {
 
     # Write keys line-by-line (avoid here-string interpolation issues)
     @(
-        "# OpenClaw-Vault API keys - NEVER committed to git",
+        "# OpenCli-Container API keys - NEVER committed to git",
         "ANTHROPIC_API_KEY=$AnthropicPlain",
         "OPENAI_API_KEY=$OpenAIPlain"
     ) | Set-Content $EnvFile -Encoding UTF8
@@ -97,8 +97,8 @@ else {
 
 # --- Build and start ---
 Write-Host ""
-Write-Host "[*] Building openclaw-vault container image..."
-& $Runtime build -t openclaw-vault -f (Join-Path $VaultDir "Containerfile") $VaultDir
+Write-Host "[*] Building opencli-container container image..."
+& $Runtime build -t opencli-container -f (Join-Path $VaultDir "Containerfile") $VaultDir
 
 Write-Host ""
 Write-Host "[*] Starting vault stack..."
@@ -118,7 +118,7 @@ Write-Host @"
 +======================================================+
 |                    VAULT IS READY                     |
 |------------------------------------------------------|
-|  Attach: $Runtime exec -it openclaw-vault sh          |
+|  Attach: $Runtime exec -it opencli-container sh          |
 |  Logs:   $Runtime compose logs -f                     |
 |  Stop:   .\scripts\kill.ps1 -Mode soft                |
 |  Nuke:   .\scripts\kill.ps1 -Mode hard               |

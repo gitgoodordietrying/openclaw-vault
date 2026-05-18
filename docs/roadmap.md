@@ -1,8 +1,8 @@
-# OpenClaw-Vault Roadmap
+# OpenCli-Container Roadmap
 
 **Updated:** 2026-03-30
 **Current state:** All three shell levels operational. Per-tool whitelisting/blacklisting with 24-point verification. Hard Shell, Split Shell, and Soft Shell presets. Monitoring tools (network, session, audit, log rotation) all implemented.
-**Cross-reference:** See `docs/trifecta.md` in the lobster-trapp root for how this module fits with clawhub-forge and moltbook-pioneer.
+**Cross-reference:** See `docs/trifecta.md` in the opentrapp root for how this module fits with openskill-forge and openagent-social.
 
 ---
 
@@ -15,9 +15,9 @@
 | Fix `component.yml` config paths | `openclaw-hardening.yml` → `config/openclaw-hardening.json5`, `allowlist.txt` → `proxy/allowlist.txt`, format `yaml` → `json5` |
 | Update `CLAUDE.md` | Profile `"minimal"` → `"coding"` (current Split Shell state), fix stale claims |
 | Complete Gear → Shell terminology migration | Update `docs/setup-guide.md`, cross-reference `GLOSSARY.md` |
-| Remove redundant `monitoring/skill-scanner.sh` | Replace with pointer to clawhub-forge's `tools/skill-scan.sh` |
+| Remove redundant `monitoring/skill-scanner.sh` | Replace with pointer to openskill-forge's `tools/skill-scan.sh` |
 | Add OpenClaw version pin note | `openclaw-internals.md` and `phase1-findings.md` cover different versions (2026.2.17 vs 2026.2.26) — clarify which is current (2026.2.26, pinned in Containerfile) |
-| Split `definitions.md` | Keep ecosystem definitions (lines 1-120). Move competitive positioning (121-323) to `product-assessment.md` in lobster-trapp root |
+| Split `definitions.md` | Keep ecosystem definitions (lines 1-120). Move competitive positioning (121-323) to `product-assessment.md` in opentrapp root |
 
 **Exit criteria:** All docs reflect current state. No stale claims. Terminology consistent.
 
@@ -76,7 +76,7 @@ Replace `monitoring/session-report.sh` stub with a real implementation.
 ### 2c: Skill Scanner Stub Cleanup
 
 - Delete `monitoring/skill-scanner.sh`
-- Create `monitoring/README.md` explaining that skill scanning lives in clawhub-forge
+- Create `monitoring/README.md` explaining that skill scanning lives in openskill-forge
 - Update `TODO.md` to reflect this decision
 
 ### 2d: Log Rotation
@@ -287,4 +287,4 @@ Phase 8 (Final review + certification)
 
 ---
 
-*This roadmap covers the openclaw-vault module only. See `clawhub-forge/docs/roadmap.md` and `moltbook-pioneer/docs/roadmap.md` for the other modules. See `docs/trifecta.md` in the lobster-trapp root for the cross-module strategy.*
+*This roadmap covers the opencli-container module only. See `openskill-forge/docs/roadmap.md` and `openagent-social/docs/roadmap.md` for the other modules. See `docs/trifecta.md` in the opentrapp root for the cross-module strategy.*

@@ -14,7 +14,7 @@ echo ""
 # Test 1: Soft kill stops containers
 echo -n "  Soft kill: "
 bash "$VAULT_DIR/scripts/kill.sh" --soft >/dev/null 2>&1
-running=$($RUNTIME ps --filter name=openclaw-vault --format "{{.Names}}" 2>/dev/null || true)
+running=$($RUNTIME ps --filter name=opencli-container --format "{{.Names}}" 2>/dev/null || true)
 if [ -z "$running" ]; then
     echo "PASS (containers stopped)"
 else
@@ -30,7 +30,7 @@ sleep 3
 # Test 2: Hard kill removes everything
 echo -n "  Hard kill: "
 bash "$VAULT_DIR/scripts/kill.sh" --hard >/dev/null 2>&1
-remaining=$($RUNTIME ps -a --filter name=openclaw-vault --format "{{.Names}}" 2>/dev/null || true)
+remaining=$($RUNTIME ps -a --filter name=opencli-container --format "{{.Names}}" 2>/dev/null || true)
 if [ -z "$remaining" ]; then
     echo "PASS (containers removed)"
 else

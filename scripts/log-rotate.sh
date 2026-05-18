@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# OpenClaw-Vault: Log Rotation
+# OpenCli-Container: Log Rotation
 #
 # Rotates proxy logs and monitors session transcript size.
 # Runs from the host. Safe to run while containers are running or stopped.
@@ -58,7 +58,7 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 echo ""
-echo -e "${BOLD}OpenClaw-Vault: Log Rotation${NC}"
+echo -e "${BOLD}OpenCli-Container: Log Rotation${NC}"
 echo "============================"
 echo ""
 
@@ -79,7 +79,7 @@ if $proxy_running; then
     log_lines=$($RUNTIME exec "$PROXY_CONTAINER" sh -c "wc -l < $PROXY_LOG_PATH 2>/dev/null" || echo "0")
 else
     # Try to find the volume on the host
-    vol_path=$($RUNTIME volume inspect openclaw-vault_vault-proxy-logs --format '{{.Mountpoint}}' 2>/dev/null || echo "")
+    vol_path=$($RUNTIME volume inspect opencli-container_vault-proxy-logs --format '{{.Mountpoint}}' 2>/dev/null || echo "")
     if [ -n "$vol_path" ] && [ -f "$vol_path/requests.jsonl" ]; then
         log_size=$(stat -c %s "$vol_path/requests.jsonl" 2>/dev/null || echo "0")
         log_lines=$(wc -l < "$vol_path/requests.jsonl" 2>/dev/null || echo "0")
@@ -146,7 +146,7 @@ if $vault_running; then
     session_count=$($RUNTIME exec "$VAULT_CONTAINER" sh -c "find /home/vault/.openclaw/agents/main/sessions/ -name '*.jsonl' -type f 2>/dev/null | wc -l" || echo "0")
 else
     echo "  Container not running — checking volume..."
-    vault_vol=$($RUNTIME volume inspect openclaw-vault_vault-data --format '{{.Mountpoint}}' 2>/dev/null || echo "")
+    vault_vol=$($RUNTIME volume inspect opencli-container_vault-data --format '{{.Mountpoint}}' 2>/dev/null || echo "")
     if [ -n "$vault_vol" ] && [ -d "$vault_vol/agents/main/sessions" ]; then
         session_size=$(du -sb "$vault_vol/agents/main/sessions/" 2>/dev/null | cut -f1 || echo "0")
         session_count=$(find "$vault_vol/agents/main/sessions/" -name '*.jsonl' -type f 2>/dev/null | wc -l || echo "0")

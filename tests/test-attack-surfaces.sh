@@ -8,7 +8,7 @@ set -uo pipefail
 
 RUNTIME="${RUNTIME:-podman}"
 command -v "$RUNTIME" &>/dev/null || RUNTIME="docker"
-CONTAINER="openclaw-vault"
+CONTAINER="opencli-container"
 PASS=0
 FAIL=0
 

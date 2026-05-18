@@ -14,7 +14,7 @@ set -uo pipefail
 
 RUNTIME="podman"
 command -v podman &>/dev/null || RUNTIME="docker"
-CONTAINER="openclaw-vault"
+CONTAINER="opencli-container"
 
 # Parse arguments
 LAST=20

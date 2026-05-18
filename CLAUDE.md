@@ -1,8 +1,8 @@
-# OpenClaw-Vault — Hardened Security Harness for OpenClaw
+# OpenCli-Container — Hardened Security Harness for OpenClaw
 
 ## What This Is
 
-OpenClaw-Vault is a **hardened security harness** that safely runs the OpenClaw autonomous agent runtime inside a containerized, proxy-gated environment. Its core innovations:
+OpenCli-Container is a **hardened security harness** that safely runs the OpenClaw autonomous agent runtime inside a containerized, proxy-gated environment. Its core innovations:
 
 1. **API keys never enter the agent container** — a mitmproxy sidecar injects credentials at the network layer
 2. **All network traffic is logged and filtered** — domain allowlist enforced by the proxy
@@ -12,13 +12,13 @@ OpenClaw-Vault is a **hardened security harness** that safely runs the OpenClaw 
 
 **For detailed source code analysis:** See `docs/openclaw-internals.md`
 
-## This Repo Is a Lobster-TrApp Component
+## This Repo Is a OpenTrApp Component
 
-This repo is integrated into [lobster-trapp](https://github.com/albertdobmeyer/lobster-trapp) as a git submodule under `components/openclaw-vault/`. The file `component.yml` in this repo's root is the **manifest contract** that tells the Lobster-TrApp GUI how to discover, display, and control this component.
+This repo is integrated into [opentrapp](https://github.com/albertdobmeyer/opentrapp) as a git submodule under `components/opencli-container/`. The file `component.yml` in this repo's root is the **manifest contract** that tells the OpenTrApp GUI how to discover, display, and control this component.
 
 ### Manifest Contract Rules
 - `component.yml` must always parse as valid YAML
-- `identity.id` must be `openclaw-vault` (the GUI uses this as a stable key)
+- `identity.id` must be `opencli-container` (the GUI uses this as a stable key)
 - `identity.role` must be `runtime`
 - All `available_when` values must reference states declared in `status.states`
 - All `restart_command` values in configs must reference command IDs in `commands`
@@ -26,10 +26,10 @@ This repo is integrated into [lobster-trapp](https://github.com/albertdobmeyer/l
 - Health probe IDs must be unique
 
 ### Validating the Manifest
-From the lobster-trapp root:
+From the opentrapp root:
 ```bash
 bash tests/orchestrator-check.sh    # Validates all manifests including this one
-cargo test -p lobster-trapp          # Rust tests parse this manifest specifically
+cargo test -p opentrapp          # Rust tests parse this manifest specifically
 ```
 
 ## Architecture
@@ -48,7 +48,7 @@ Two-container stack (compose.yml):
 └──────────────┬──────────────────────────────┘
                │ HTTP proxy (vault-internal network)
 ┌──────────────┴──────────────────────────────┐
-│  openclaw-vault (agent container)           │
+│  opencli-container (agent container)           │
 │  - OpenClaw gateway running with Haiku      │
 │  - Read-only root filesystem                │
 │  - All Linux capabilities dropped           │
@@ -68,15 +68,15 @@ Two-container stack (compose.yml):
 
 ### The Full Perimeter
 
-This repo's 2-container stack (vault-agent + vault-proxy) is the core of a larger 4-container perimeter defined in `compose.yml` at the lobster-trapp root. Two additional containers operate inside this perimeter:
+This repo's 2-container stack (vault-agent + vault-proxy) is the core of a larger 4-container perimeter defined in `compose.yml` at the opentrapp root. Two additional containers operate inside this perimeter:
 
-- **vault-forge** (clawhub-forge) — downloads and scans SKILL files inside the fence, delivers certified clean output to the agent via a shared volume (forge-deliveries). Runs on forge-net.
-- **vault-pioneer** (moltbook-pioneer) — originally scanned Moltbook feed content for injection patterns. **Parked since 2026-05-03** following Meta's acquisition of Moltbook (2026-03-10) and the resulting API instability since 2026-04-05. The container is still defined in `compose.yml` for completeness.
+- **vault-forge** (openskill-forge) — downloads and scans SKILL files inside the fence, delivers certified clean output to the agent via a shared volume (forge-deliveries). Runs on forge-net.
+- **vault-pioneer** (openagent-social) — originally scanned Moltbook feed content for injection patterns. **Parked since 2026-05-03** following Meta's acquisition of Moltbook (2026-03-10) and the resulting API instability since 2026-04-05. The container is still defined in `compose.yml` for completeness.
 
 Both connect to vault-proxy for internet access but cannot reach vault-agent or each other directly. The vault is the inner perimeter; forge and pioneer operate alongside it inside the same compose network.
 
 ```
-4-container perimeter (lobster-trapp compose.yml):
+4-container perimeter (opentrapp compose.yml):
 
 vault-proxy ←── forge-net ──→ vault-forge
      ↑
@@ -100,11 +100,11 @@ vault-agent ←── forge-deliveries (shared volume, read-only) ──→ vaul
 ## Directory Structure
 
 ```
-openclaw-vault/
+opencli-container/
 ├── Containerfile                   Hardened multi-stage image (Node 22-alpine)
 ├── compose.yml                     Container + proxy orchestration
 ├── .env.example                    API key + bot token template (gitignored)
-├── component.yml                   MANIFEST — Lobster-TrApp contract
+├── component.yml                   MANIFEST — OpenTrApp contract
 ├── config/
 │   ├── tool-manifest.yml           Source of truth — all tools, risk, injection vectors
 │   ├── openclaw-hardening.json5    Agent config (JSON5, baked into image)
@@ -175,7 +175,7 @@ openclaw-vault/
 | `network-report` | `make network-report` | safe | Analyze proxy logs for anomalies |
 | `session-report` | `make session-report` | safe | Post-session activity summary |
 | `log-rotate` | `make log-rotate` | safe | Rotate proxy logs, check transcript size |
-| `logs` | `podman logs -f openclaw-vault` | safe | Stream vault logs |
+| `logs` | `podman logs -f opencli-container` | safe | Stream vault logs |
 | `proxy-logs` | `podman logs -f vault-proxy` | safe | Stream proxy logs |
 
 ## Editable Configs (via GUI)
@@ -236,7 +236,7 @@ openclaw-vault/
 
 ## What NOT to Do
 
-- Do not change `identity.id` or `identity.role` in component.yml without coordinating with lobster-trapp
+- Do not change `identity.id` or `identity.role` in component.yml without coordinating with opentrapp
 - Do not remove or rename command IDs that the GUI depends on — add new ones instead
 - Do not put real API keys anywhere except `.env` (which is gitignored) — they belong in the proxy only
 - Do not disable seccomp profiles or add capabilities — the security model is defense-in-depth

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# OpenClaw-Vault: Workspace Audit Tool
+# OpenCli-Container: Workspace Audit Tool
 #
 # Provides complete visibility into what the agent has done.
 # Runs from the host. Works whether the container is running or stopped.
@@ -103,7 +103,7 @@ audit_full() {
         echo "  Container not running. Attempting via volume mount..."
         # Try to read the volume directly from the host
         local vol_path
-        vol_path=$($RUNTIME volume inspect openclaw-vault_vault-data --format '{{.Mountpoint}}' 2>/dev/null)
+        vol_path=$($RUNTIME volume inspect opencli-container_vault-data --format '{{.Mountpoint}}' 2>/dev/null)
         if [ -n "$vol_path" ] && [ -d "$vol_path/workspace" ]; then
             find "$vol_path/workspace" -type f -printf '  %T+ %8s %p\n' 2>/dev/null | sort
             echo ""
@@ -309,7 +309,7 @@ audit_network() {
     else
         # Try reading from volume
         local vol_path
-        vol_path=$($RUNTIME volume inspect openclaw-vault_vault-proxy-logs --format '{{.Mountpoint}}' 2>/dev/null)
+        vol_path=$($RUNTIME volume inspect opencli-container_vault-proxy-logs --format '{{.Mountpoint}}' 2>/dev/null)
         if [ -n "$vol_path" ] && [ -f "$vol_path/requests.jsonl" ]; then
             log_content=$(cat "$vol_path/requests.jsonl")
         else
@@ -644,7 +644,7 @@ audit_injection() {
 
 print_banner() {
     echo ""
-    echo -e "${BOLD}OpenClaw-Vault Workspace Audit${NC}"
+    echo -e "${BOLD}OpenCli-Container Workspace Audit${NC}"
     echo "=============================="
     echo ""
     echo "  Container:  ${CONTAINER:-vault} ($([ -n "$CONTAINER" ] && is_container_running "$CONTAINER" && echo 'running' || echo 'not found'))"

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# OpenClaw-Vault: Test Runner
+# OpenCli-Container: Test Runner
 #
 # Runs all test scripts in tests/ sequentially and reports results.
-# Requires the openclaw-vault container to be running.
+# Requires the opencli-container container to be running.
 #
 # Usage: bash scripts/run-tests.sh
 #        make test
@@ -21,13 +21,13 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo ""
-echo -e "${BOLD}OpenClaw-Vault: Test Suite${NC}"
+echo -e "${BOLD}OpenCli-Container: Test Suite${NC}"
 echo "========================="
 echo ""
 
 # Check container is running
-if ! $RUNTIME inspect openclaw-vault --format '{{.State.Status}}' 2>/dev/null | grep -q "running"; then
-    echo -e "${RED}ERROR: openclaw-vault container is not running.${NC}"
+if ! $RUNTIME inspect opencli-container --format '{{.State.Status}}' 2>/dev/null | grep -q "running"; then
+    echo -e "${RED}ERROR: opencli-container container is not running.${NC}"
     echo "  Start it first: make start"
     exit 1
 fi

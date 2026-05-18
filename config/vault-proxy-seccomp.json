@@ -1,5 +1,5 @@
 {
-  "_comment": "OpenClaw-Vault: Seccomp profile for vault-proxy (mitmproxy sidecar). Based on Docker's default profile with dangerous escape vectors explicitly blocked.",
+  "_comment": "OpenCli-Container: Seccomp profile for vault-proxy (mitmproxy sidecar). Based on Docker's default profile with dangerous escape vectors explicitly blocked.",
   "defaultAction": "SCMP_ACT_ERRNO",
   "defaultErrnoRet": 1,
   "archMap": [

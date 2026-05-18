@@ -3,7 +3,7 @@
 set -euo pipefail
 
 RUNTIME="${RUNTIME:-podman}"
-CONTAINER="openclaw-vault"
+CONTAINER="opencli-container"
 
 echo "=== API Key Isolation Tests ==="
 

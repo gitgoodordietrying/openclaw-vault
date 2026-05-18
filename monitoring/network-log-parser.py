@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenClaw-Vault: Network Log Parser — Anomaly Detection on Proxy Logs
+OpenCli-Container: Network Log Parser — Anomaly Detection on Proxy Logs
 
 Parses vault-proxy's requests.jsonl and flags security-relevant events.
 This is the "always know what the agent is up to" tool for network activity.
@@ -122,7 +122,7 @@ def find_log_source():
     # Try reading from volume mount
     try:
         result = subprocess.run(
-            [runtime, "volume", "inspect", "openclaw-vault_vault-proxy-logs",
+            [runtime, "volume", "inspect", "opencli-container_vault-proxy-logs",
              "--format", "{{.Mountpoint}}"],
             capture_output=True,
             text=True,
@@ -348,7 +348,7 @@ def print_report(findings, stats, malformed):
     bold = "\033[1m"
 
     print()
-    print(f"{bold}OpenClaw-Vault: Network Log Analysis{nc}")
+    print(f"{bold}OpenCli-Container: Network Log Analysis{nc}")
     print("=" * 40)
 
     # --- Summary ---

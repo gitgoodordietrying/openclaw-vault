@@ -1,8 +1,8 @@
-# OpenClaw-Vault: Phase 2 — Create dedicated WSL2 distro
+# OpenCli-Container: Phase 2 — Create dedicated WSL2 distro
 # STATUS: Placeholder — not yet implemented
 #
 # Will:
-#   1. Import a minimal Alpine/Ubuntu image as 'openclaw-vault' distro
+#   1. Import a minimal Alpine/Ubuntu image as 'opencli-container' distro
 #   2. Copy wsl.conf into the distro
 #   3. Install Podman inside the distro
 #   4. Configure dnsmasq for DNS allowlisting

@@ -1,7 +1,7 @@
 # Phase 1 Findings — OpenClaw Compatibility Verification
 
 **Date:** 2026-03-23
-**Vault version:** openclaw-vault @ main (post-Phase-0 + Phase-1 fixes)
+**Vault version:** opencli-container @ main (post-Phase-0 + Phase-1 fixes)
 **OpenClaw version:** openclaw@2026.2.17 (since upgraded to 2026.2.26 — see `Containerfile` line 19)
 **Test key:** Anthropic Haiku-only, $5 cap, no web tools
 **Container runtime:** Podman 4.9.3 (rootless) on Ubuntu 24.04
@@ -158,4 +158,4 @@ This means **Phase 2 must set up Telegram** before we can test actual agent inte
 
 5. **Network test rewrite:** The test-network-isolation.sh needs a proxy-aware HTTP client. This is a test tooling issue, not a security issue.
 
-*Note: This document uses the original phase numbering from early development. "Gear 1/2/3" has since been renamed to "Hard/Split/Soft Shell" — see `GLOSSARY.md` in the lobster-trapp root.*
+*Note: This document uses the original phase numbering from early development. "Gear 1/2/3" has since been renamed to "Hard/Split/Soft Shell" — see `GLOSSARY.md` in the opentrapp root.*

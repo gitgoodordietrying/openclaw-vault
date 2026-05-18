@@ -1,10 +1,10 @@
-# openclaw-vault
+# opencli-container
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A hardened container harness for the [OpenClaw](https://github.com/anthropics/openclaw) autonomous agent runtime. Provides runtime containment for an autonomous AI agent that would otherwise have full access to the host system.
 
-This repository is the runtime-containment module of the [Lobster-TrApp](https://github.com/albertdobmeyer/lobster-trapp) distribution; it ships as a git submodule and contributes the `vault-agent` and `vault-proxy` containers to the four-container perimeter.
+This repository is the runtime-containment module of the [OpenTrApp](https://github.com/albertdobmeyer/opentrapp) distribution; it ships as a git submodule and contributes the `vault-agent` and `vault-proxy` containers to the four-container perimeter.
 
 **Author:** [@albertdobmeyer](https://github.com/albertdobmeyer)
 
@@ -22,7 +22,7 @@ Three names, three layers:
 - **ClawHub** — a third-party skill (plugin) registry for OpenClaw. The ClawHavoc study (2026-Q1) classified 341 of 2,857 published ClawHub skills (11.9 %) as malicious.
 - **Moltbook** — a third-party AI-agent social network. Acquired by Meta on 2026-03-10.
 
-`openclaw-vault` does not develop, distribute, or alter any of these. It provides container-level isolation around the OpenClaw runtime so that an end user can experiment with the ecosystem without granting the agent process unrestricted access to the host filesystem, host network, or stored credentials.
+`opencli-container` does not develop, distribute, or alter any of these. It provides container-level isolation around the OpenClaw runtime so that an end user can experiment with the ecosystem without granting the agent process unrestricted access to the host filesystem, host network, or stored credentials.
 
 ## Architecture
 
@@ -50,7 +50,7 @@ HOST
       --nuclear (remove containers + prune runtime caches)
 ```
 
-When integrated with `lobster-trapp`, two further containers (`vault-forge`, `vault-pioneer`) operate inside the same perimeter; see `docs/trifecta.md` in the parent repository for the full topology.
+When integrated with `opentrapp`, two further containers (`vault-forge`, `vault-pioneer`) operate inside the same perimeter; see `docs/trifecta.md` in the parent repository for the full topology.
 
 ---
 
@@ -85,7 +85,7 @@ The vault is a constrained-execution environment for OpenClaw, not an agentic wo
 
 - Connect to the Moltbook API (when available) for read-and-react workflows
 - Receive Telegram messages and send replies through the dedicated bot
-- Hold sessions, accept system-prompt and persona updates, and run skills certified by `clawhub-forge`
+- Hold sessions, accept system-prompt and persona updates, and run skills certified by `openskill-forge`
 - Read and write within its sandboxed workspace
 - Make outbound HTTP(S) requests to allowlisted domains via the proxy
 
@@ -121,8 +121,8 @@ Requirements: Podman or Docker, an Anthropic or OpenAI API key.
 ### Recommended path: Podman/Docker + mitmproxy sidecar
 
 ```bash
-git clone https://github.com/albertdobmeyer/openclaw-vault.git
-cd openclaw-vault
+git clone https://github.com/albertdobmeyer/opencli-container.git
+cd opencli-container
 bash scripts/setup.sh        # Linux / macOS
 .\scripts\setup.ps1          # Windows PowerShell
 ```
@@ -239,7 +239,7 @@ podman compose restart vault-proxy   # full restart
 podman exec vault-proxy kill -HUP 1  # hot reload without restart
 ```
 
-ClawHub registry domains are commented out by default. Uncomment only after explicit source-code review of a specific skill; the recommended practice is to use `clawhub-forge` to scan and certify the skill instead.
+ClawHub registry domains are commented out by default. Uncomment only after explicit source-code review of a specific skill; the recommended practice is to use `openskill-forge` to scan and certify the skill instead.
 
 ---
 
@@ -283,10 +283,10 @@ These are architectural realities of the design, not bugs.
 ## Project structure
 
 ```
-openclaw-vault/
+opencli-container/
 ├── Containerfile                    multi-stage hardened image
 ├── compose.yml                      container + proxy orchestration
-├── component.yml                    Lobster-TrApp manifest contract
+├── component.yml                    OpenTrApp manifest contract
 ├── Makefile                         standardised targets (setup, verify, test, …)
 ├── config/
 │   ├── tool-manifest.yml            source of truth for every OpenClaw tool

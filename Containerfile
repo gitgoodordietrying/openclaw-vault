@@ -1,8 +1,8 @@
-# OpenClaw-Vault: Hardened OpenClaw Container
+# OpenCli-Container: Hardened OpenClaw Container
 # Defense-in-depth Layer 2 — rootless container with minimal attack surface
 #
-# Build:  podman build -t openclaw-vault -f Containerfile .
-# Or:     docker build -t openclaw-vault -f Containerfile .
+# Build:  podman build -t opencli-container -f Containerfile .
+# Or:     docker build -t opencli-container -f Containerfile .
 
 # node 22.22.1-alpine — pinned 2026-03-23 (OpenClaw requires Node >=22.12.0)
 FROM node:22-alpine@sha256:8094c002d08262dba12645a3b4a15cd6cd627d30bc782f53229a2ec13ee22a00 AS builder
@@ -22,7 +22,7 @@ RUN npm install -g openclaw@2026.2.26 --ignore-scripts
 # node 22.22.1-alpine — pinned 2026-03-23 (OpenClaw requires Node >=22.12.0)
 FROM node:22-alpine@sha256:8094c002d08262dba12645a3b4a15cd6cd627d30bc782f53229a2ec13ee22a00
 
-LABEL maintainer="OpenClaw-Vault" \
+LABEL maintainer="OpenCli-Container" \
       description="Hardened OpenClaw sandbox — rootless, read-only, proxy-gated"
 
 # Remove package managers and network tools after base setup

@@ -8,7 +8,7 @@
 
 ## Purpose
 
-Define and implement how a clawhub-forge-vetted skill enters the openclaw-vault. This is the most important integration gap between the three modules (per trifecta.md).
+Define and implement how a openskill-forge-vetted skill enters the opencli-container. This is the most important integration gap between the three modules (per trifecta.md).
 
 ## Current State
 
@@ -36,7 +36,7 @@ This workflow works today with existing tools:
 1. User obtains skill SKILL.md (from ClawHub, custom, or forge output)
 
 2. User scans the skill with forge:
-   cd components/clawhub-forge
+   cd components/openskill-forge
    make scan-one SKILL=<name>           # 87-pattern security scan
    make verify-skill SKILL=<name>       # zero-trust line classification
 
@@ -46,10 +46,10 @@ This workflow works today with existing tools:
    - Clean scan + VERIFIED verdict → safe to install
 
 4. User copies skill into vault workspace:
-   podman cp <skill-dir>/SKILL.md openclaw-vault:/home/vault/.openclaw/workspace/skills/<name>/SKILL.md
+   podman cp <skill-dir>/SKILL.md opencli-container:/home/vault/.openclaw/workspace/skills/<name>/SKILL.md
 
 5. User verifies installation:
-   podman exec openclaw-vault ls -la /home/vault/.openclaw/workspace/skills/
+   podman exec opencli-container ls -la /home/vault/.openclaw/workspace/skills/
 
 6. Agent can now reference the skill from its workspace
 ```

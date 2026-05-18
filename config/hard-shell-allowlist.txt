@@ -1,4 +1,4 @@
-# OpenClaw-Vault: Domain Allowlist (Hard Shell)
+# OpenCli-Container: Domain Allowlist (Hard Shell)
 # One domain per line. Subdomains are automatically included.
 # Lines starting with # are comments.
 #

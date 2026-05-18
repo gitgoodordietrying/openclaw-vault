@@ -8,7 +8,7 @@ COMPOSE := $(RUNTIME) compose
 
 help: ## Show available commands
 	@echo ""
-	@echo "  openclaw-vault"
+	@echo "  opencli-container"
 	@echo "  =============="
 	@echo ""
 	@echo "  runtime: $(RUNTIME)"

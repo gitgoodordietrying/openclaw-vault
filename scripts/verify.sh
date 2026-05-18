@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# OpenClaw-Vault: Security Verification (24 checks)
+# OpenCli-Container: Security Verification (24 checks)
 #
 # Validates all security controls. Runs from the host (execs into container).
 # Shell-aware: detects Hard Shell or Split Shell and verifies config accordingly.
@@ -70,7 +70,7 @@ check() {
 }
 
 echo ""
-echo "OpenClaw-Vault Security Verification"
+echo "OpenCli-Container Security Verification"
 echo "====================================="
 echo ""
 

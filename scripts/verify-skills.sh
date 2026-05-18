@@ -7,7 +7,7 @@ set -uo pipefail
 VAULT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 RUNTIME="podman"
 command -v podman &>/dev/null || RUNTIME="docker"
-CONTAINER="openclaw-vault"
+CONTAINER="opencli-container"
 WORKSPACE_SKILLS="/home/vault/.openclaw/workspace/skills"
 
 BOLD='\033[1m'
@@ -73,13 +73,13 @@ if (( UNVERIFIED > 0 )); then
   echo ""
   echo -e "${YELLOW}WARNING: $UNVERIFIED skill(s) have no trust file.${NC}"
   echo "  These skills bypassed the forge security pipeline."
-  echo "  Run: cd components/clawhub-forge && make certify SKILL=<name>"
+  echo "  Run: cd components/openskill-forge && make certify SKILL=<name>"
 fi
 
 if (( MODIFIED > 0 )); then
   echo ""
   echo -e "${YELLOW}WARNING: $MODIFIED skill(s) modified after verification.${NC}"
-  echo "  Re-certify with: cd components/clawhub-forge && make certify SKILL=<name>"
+  echo "  Re-certify with: cd components/openskill-forge && make certify SKILL=<name>"
 fi
 
 echo ""
